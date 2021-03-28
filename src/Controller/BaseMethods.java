@@ -1,6 +1,9 @@
 package Controller;
 
 import java.awt.Component;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -50,6 +53,25 @@ public class BaseMethods {
 		}
 
 		return false;
+	}
+	
+	public static String FormatDate(LocalDate date) {
+		String formattedDate = null;
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+		
+		if (date != null) {
+			formattedDate = date.format(dateFormat);
+		}
+		
+		return formattedDate;
+	}
+
+	public static String FormatTime(LocalTime time) {
+		DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+		String formattedTime = time.format(timeFormat);
+
+		return formattedTime;
 	}
 
 //	public static DowntimeModel LoadDowntimeModel(String s) {

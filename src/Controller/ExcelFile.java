@@ -2,6 +2,7 @@ package Controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -19,20 +20,49 @@ import Model.PalletModel;
 
 public class ExcelFile {
 
-	private static String FREE = "FREE";
-	private static int NOT_FOUND = -1;
+	private final static int NOT_FOUND = -1;
+	private static long timeStamp = 0;
+	private static Workbook workbook;
+	private static HashMap<Integer, PalletModel> allRows;
 
-	private static Workbook ReadExcelFile() throws IOException {
-		FileInputStream file = new FileInputStream(new File(Base.dbFile));
-		Workbook workbook = new XSSFWorkbook(file);
+	private static void ReadExcelFile() {
+		File file = new File(Base.mainDbFile);
+		FileInputStream streamFile = null;
+		try {
+			streamFile = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			workbook = new XSSFWorkbook(streamFile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		timeStamp = file.lastModified();
 
-		file.close();
-		return workbook;
+		try {
+			streamFile.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void CheckIfFileIsEdited() {
+		File file = new File(Base.mainDbFile);
+		long currentTimeStamp = file.lastModified();
+		
+		if (currentTimeStamp != timeStamp) {
+			ReadExcelFile();
+			ReadAllRows();
+		}
 	}
 
-	public static void SaveData(int row, String batteryType, String quantityReal, String quantity, String destination,
-			Boolean status, String date, String time, Boolean isReserved) throws IOException {
-		FileInputStream file = new FileInputStream(new File(Base.dbFile));
+	public static void SaveData(PalletModel pm) throws IOException {
+		FileInputStream file = new FileInputStream(new File(Base.mainDbFile));
 		XSSFWorkbook workbook = new XSSFWorkbook(file);
 		XSSFSheet sheet = workbook.getSheetAt(0);
 
@@ -41,42 +71,42 @@ public class ExcelFile {
 
 		XSSFCell cellToUpdate;
 
-		cellToUpdate = sheet.getRow(row).getCell(1);
-		cellToUpdate.setCellValue(batteryType);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(1);
+		cellToUpdate.setCellValue(pm.getBatteryType());
 
-		cellToUpdate = sheet.getRow(row).getCell(2);
-		cellToUpdate.setCellValue(quantityReal);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(2);
+		cellToUpdate.setCellValue(pm.getQuantityReal());
 
-		cellToUpdate = sheet.getRow(row).getCell(3);
-		cellToUpdate.setCellValue(quantity);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(3);
+		cellToUpdate.setCellValue(pm.getQuantity());
 
-		cellToUpdate = sheet.getRow(row).getCell(4);
-		cellToUpdate.setCellValue(destination);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(4);
+		cellToUpdate.setCellValue(pm.getDestination());
 
-		cellToUpdate = sheet.getRow(row).getCell(5);
-		cellToUpdate.setCellValue(status);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(5);
+		cellToUpdate.setCellValue(pm.getStatus());
 
-		cellToUpdate = sheet.getRow(row).getCell(6);
-		cellToUpdate.setCellValue(date);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(6);
+		cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getIncomeDate()));
 
-		cellToUpdate = sheet.getRow(row).getCell(7);
-		cellToUpdate.setCellValue(time);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(7);
+		cellToUpdate.setCellValue(BaseMethods.FormatTime(pm.getIncomeTime()));
 
-		cellToUpdate = sheet.getRow(row).getCell(8);
-		cellToUpdate.setCellValue(isReserved);
+		cellToUpdate = sheet.getRow(pm.getRow()).getCell(8);
+		cellToUpdate.setCellValue(pm.getIsReserved());
 
 		file.close();
 
-		FileOutputStream outputStream = new FileOutputStream(Base.dbFile);
+		FileOutputStream outputStream = new FileOutputStream(Base.mainDbFile);
 		workbook.write(outputStream);
 		workbook.close();
 		outputStream.close();
 	}
 
-	public static HashMap<Integer, PalletModel> GetAllRows() throws IOException {
+	private static void ReadAllRows() {
 		Sheet sheet = GetSheet();
 
-		HashMap<Integer, PalletModel> data = new HashMap<>();
+		allRows = new HashMap<>();
 		int i = 0;
 		for (Row row : sheet) {
 			ArrayList<String> temp = new ArrayList<String>();
@@ -104,14 +134,13 @@ public class ExcelFile {
 				}
 			}
 
-			data.put(i, new PalletModel(temp));
+			allRows.put(i, new PalletModel(temp));
 			i++;
 		}
-		return data;
 	}
 
-	private static Sheet GetSheet() throws IOException {
-		Workbook workbook = ReadExcelFile();
+	private static Sheet GetSheet() {
+		CheckIfFileIsEdited();
 		Sheet sheet = workbook.getSheetAt(0);
 
 		return sheet;
@@ -124,17 +153,34 @@ public class ExcelFile {
 
 		return cell;
 	}
+	
+	public static String GetPalletName(int row) {
+		CheckIfFileIsEdited();
+		PalletModel pm;
+		
+		pm = allRows.get(row);
+		
+		return pm.getPalletName();
+	}
+	
+	public static HashMap<Integer, PalletModel> GetAllRows(){
+		CheckIfFileIsEdited();
+		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+		data.putAll(allRows);
+		return data;
+	}
 
-	public static HashMap<Integer, PalletModel> GetAllFreePlaces() throws IOException {
-
-		HashMap<Integer, PalletModel> data = GetAllRows();
+	public static HashMap<Integer, PalletModel> GetAllFreePlaces() {
+		CheckIfFileIsEdited();
+		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+		data.putAll(allRows);
 		PalletModel pm;
 
 		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<Integer, PalletModel> entry = it.next();
 			pm = entry.getValue();
 
-			if (!pm.getStatus().equals(FREE)) {
+			if (!pm.getStatus()) {
 				it.remove();
 			}
 		}
@@ -142,11 +188,31 @@ public class ExcelFile {
 		return data;
 	}
 
-	public static int GetPlaceRow(String pattern) throws IOException {
+	public static int GetFirstFreeRow() {
+		int foundOnRow = NOT_FOUND;
+		CheckIfFileIsEdited();
+		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+		data.putAll(allRows);
+		PalletModel pm;
 
+		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
+			Map.Entry<Integer, PalletModel> entry = it.next();
+			pm = entry.getValue();
+
+			if (pm.getStatus() && !pm.getIsReserved()) {
+				foundOnRow = pm.getRow();
+				break;
+			}
+		}
+
+		return foundOnRow;
+	}
+
+	public static int GetPlaceRow(String pattern) {
 		int foundOnRow = 0;
-
-		HashMap<Integer, PalletModel> data = GetAllRows();
+		CheckIfFileIsEdited();
+		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+		data.putAll(allRows);
 		PalletModel pm;
 
 		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
@@ -159,15 +225,15 @@ public class ExcelFile {
 			}
 		}
 
-		System.out.println(foundOnRow);
+		// System.out.println(foundOnRow);
 		return foundOnRow;
 	}
 
-	public static int GetBatteryTypeRow(String pattern) throws IOException {
-
+	public static int GetBatteryTypeRow(String pattern) {
 		int foundOnRow = NOT_FOUND;
-
-		HashMap<Integer, PalletModel> data = GetAllRows();
+		CheckIfFileIsEdited();
+		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+		data.putAll(allRows);
 		PalletModel pm;
 
 		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
@@ -180,21 +246,21 @@ public class ExcelFile {
 			}
 		}
 
-		System.out.println(foundOnRow);
+		// System.out.println(foundOnRow);
 		return foundOnRow;
 	}
 
-	public static int GetClosestFreePlace(String pattern) throws IOException {
+	public static int GetClosestFreePlace(String pattern) {
+		CheckIfFileIsEdited();
 		int row = GetBatteryTypeRow(pattern);
 		int i = row;
 		int y = row;
 		boolean found = false;
-		int foundRow = -1;
+		int foundRow = NOT_FOUND;
 
-		if (row == NOT_FOUND) {
-
-		} else {
-			HashMap<Integer, PalletModel> data = GetAllRows();
+		if (row != NOT_FOUND) {
+			HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
+			data.putAll(allRows);
 			PalletModel pm;
 
 			while (!found) {

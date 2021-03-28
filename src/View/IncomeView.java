@@ -1,19 +1,18 @@
 package View;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import ColorRenderers.IncomeReservedColorRenderer;
@@ -41,6 +40,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import java.awt.BorderLayout;
+
 public class IncomeView extends JDialog {
 
 	private JPanel contentPane;
@@ -50,14 +53,17 @@ public class IncomeView extends JDialog {
 	private JTextField txtQuantityReal;
 	private JTable tblMain;
 	private JLabel lblBackground;
+	private JLabel lblPalletPlace;
+	private JPanel pnlPalletPlace;
 
-	private static int row = -1;
+	private static int selectedRow = -1;
+	private static int rowToSave;
 
 	private static int excelFileRow;
 
 	private static DefaultTableModel defaultTableModel;
 	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
-			"Направление", "Дата на приход", "Час на приход", "Резервация" };
+			"Направление", "Дата на приход", "Час на приход", "Статус", "Резервация" };
 
 	/**
 	 * Create the frame.
@@ -81,7 +87,7 @@ public class IncomeView extends JDialog {
 		setLocationRelativeTo(null);
 
 		JPanel pnlButtons = new JPanel();
-		pnlButtons.setBounds(704, 727, 310, 30);
+		pnlButtons.setBounds(1046, 727, 310, 30);
 		pnlButtons.setBackground(new Color(255, 255, 255, 150));
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
@@ -93,7 +99,7 @@ public class IncomeView extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					if (ValidateForm()) {
-						ExcelFile.GetClosestFreePlace(txtBatteryType.getText());
+						SaveData();
 					}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
@@ -115,14 +121,21 @@ public class IncomeView extends JDialog {
 		});
 		btnCancel.setFont(Base.DEFAULT_FONT);
 
-		JPanel pnlInput = new JPanel();
-		pnlInput.setBounds(10, 11, 251, 572);
+		JPanel pnlInput = new JPanel() {
+			protected void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		pnlInput.setBounds(10, 11, 290, 705);
+		pnlInput.setOpaque(false);
 		pnlInput.setBackground(new Color(255, 255, 255, 200));
 		contentPane.add(pnlInput);
 		pnlInput.setLayout(null);
 
 		JPanel pnlBatteryType = new JPanel();
-		pnlBatteryType.setBounds(0, 0, 250, 74);
+		pnlBatteryType.setBounds(20, 0, 250, 74);
 		pnlInput.add(pnlBatteryType);
 		pnlBatteryType.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlBatteryType = new GridBagLayout();
@@ -146,10 +159,11 @@ public class IncomeView extends JDialog {
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (!txtBatteryType.getText().isEmpty()) {
-					if (row > 0) {
-						
+					SelectRowToSave();
+					if (selectedRow > 0) {
+						SetTextForManualSelected();
 					} else {
-						
+						SetTextForAutomaticSelected();
 					}
 				}
 			}
@@ -163,7 +177,7 @@ public class IncomeView extends JDialog {
 		txtBatteryType.setColumns(10);
 
 		JPanel pnlDate = new JPanel();
-		pnlDate.setBounds(0, 85, 250, 74);
+		pnlDate.setBounds(20, 85, 250, 74);
 		pnlInput.add(pnlDate);
 		pnlDate.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlDate = new GridBagLayout();
@@ -173,7 +187,7 @@ public class IncomeView extends JDialog {
 		gbl_pnlDate.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
 		pnlDate.setLayout(gbl_pnlDate);
 
-		JLabel lblDate = new JLabel("Дата на производство");
+		JLabel lblDate = new JLabel("Дата на производство (dd.mm.yyyy)");
 		GridBagConstraints gbc_lblDate = new GridBagConstraints();
 		gbc_lblDate.fill = GridBagConstraints.BOTH;
 		gbc_lblDate.insets = new Insets(0, 0, 5, 0);
@@ -192,7 +206,7 @@ public class IncomeView extends JDialog {
 		txtDate.setColumns(10);
 
 		JPanel pnlQuantity = new JPanel();
-		pnlQuantity.setBounds(0, 255, 250, 74);
+		pnlQuantity.setBounds(20, 255, 250, 74);
 		pnlInput.add(pnlQuantity);
 		pnlQuantity.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlQuantity = new GridBagLayout();
@@ -236,7 +250,7 @@ public class IncomeView extends JDialog {
 		});
 
 		JPanel pnlQuantityReal = new JPanel();
-		pnlQuantityReal.setBounds(0, 170, 250, 74);
+		pnlQuantityReal.setBounds(20, 170, 250, 74);
 		pnlInput.add(pnlQuantityReal);
 		pnlQuantityReal.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlQuantityReal = new GridBagLayout();
@@ -281,13 +295,29 @@ public class IncomeView extends JDialog {
 			}
 		});
 
-		JLabel lblPalletPlace = new JLabel("Автоматичен избор на палето място.");
-		lblPalletPlace.setBounds(1, 369, 250, 46);
+		pnlPalletPlace = new JPanel() {
+			protected void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		pnlPalletPlace.setBorder(new TitledBorder(
+				new EtchedBorder(EtchedBorder.LOWERED, new Color(100, 149, 237), new Color(160, 160, 160)),
+				"Складово място", TitledBorder.LEADING, TitledBorder.TOP, Base.DEFAULT_FONT, null));
+		pnlPalletPlace.setBounds(20, 345, 250, 100);
+		pnlPalletPlace.setOpaque(false);
+		pnlPalletPlace.setBackground(new Color(255, 255, 255, 0));
+		pnlPalletPlace.setVisible(false);
+		pnlInput.add(pnlPalletPlace);
+		pnlPalletPlace.setLayout(new BorderLayout(0, 0));
+
+		lblPalletPlace = new JLabel("");
+		pnlPalletPlace.add(lblPalletPlace);
 		lblPalletPlace.setFont(Base.DEFAULT_FONT);
-		pnlInput.add(lblPalletPlace);
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(271, 11, 743, 705);
+		scrollPane.setBounds(310, 11, 1046, 705);
 		contentPane.add(scrollPane);
 
 		defaultTableModel = new DefaultTableModel(0, 0);
@@ -307,10 +337,33 @@ public class IncomeView extends JDialog {
 		tblMain.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				row = tblMain.getSelectedRow();
+				selectedRow = tblMain.getSelectedRow();
 
-				if (row >= 0) {
-					SelectTableRow(row);
+				if (selectedRow != -1) {
+					int reservedColumn = 8;
+					int statusColumn = 7;
+
+					Boolean isReserved = Boolean
+							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, reservedColumn).toString());
+					Boolean isFree = Boolean
+							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, statusColumn).toString());
+
+					if (isReserved || !isFree) {
+						selectedRow = -1;
+					}
+				}
+
+				SelectRowToSave();
+
+				if (selectedRow != -1) {
+					SetTextForManualSelected();
+				} else {
+					if (!txtBatteryType.getText().isEmpty()) {
+						SetTextForAutomaticSelected();
+					} else {
+						lblPalletPlace.setText("");
+						pnlPalletPlace.setVisible(false);
+					}
 				}
 			}
 		});
@@ -332,24 +385,59 @@ public class IncomeView extends JDialog {
 		setVisible(true);
 	}
 
-	private void GetPalletPlace() {
+	private void SetTextForManualSelected() {
+		pnlPalletPlace.setVisible(true);
+		lblPalletPlace.setText("<html>Ръчно избрано складово място: "
+				+ tblMain.getModel().getValueAt(selectedRow, 0).toString() + "</html>");
+	}
+
+	private void SetTextForAutomaticSelected() {
+		pnlPalletPlace.setVisible(true);
+		lblPalletPlace
+				.setText("<html>Автоматично избрано складово място: " + ExcelFile.GetPalletName(rowToSave) + "</html>");
 
 	}
 
-	private void SelectTableRow(int row) {
-		int column = 0;
-		int reservedColumn = 7;
+	private void SaveData() throws IOException {
+		PalletModel pm = new PalletModel();
+		pm.setRow(rowToSave);
+		pm.setBatteryType(txtBatteryType.getText());
+		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
+		pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
+		pm.setIncomeDate(LocalDate.parse(txtDate.getText(), Base.dateFormat));
+		pm.setIncomeTime(LocalTime.now());
+		pm.setStatus(false);
+		pm.setIsReserved(false);
+		pm.setDestination(null);
 
-		String value = tblMain.getModel().getValueAt(row, column).toString();
-		Boolean isReserved = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, reservedColumn).toString());
-		if (!isReserved) {
-			try {
-				if (!txtBatteryType.getText().isEmpty()) {
-					excelFileRow = ExcelFile.GetPlaceRow(value);
+		ExcelFile.SaveData(pm);
+		ShowNotify(pm);
+	}
+
+	private void ShowNotify(PalletModel pm) throws IOException {
+		String pmName = ExcelFile.GetPalletName(pm.getRow());
+		int result = JOptionPane.showConfirmDialog(null, "На складово място " + pmName + " е заприходен Тип Батерия: "
+				+ pm.getBatteryType() + ", количество: " + pm.getQuantityReal(), "Успешен запис",
+				JOptionPane.DEFAULT_OPTION);
+		if (result == JOptionPane.OK_OPTION) {
+			this.dispose();
+		}
+	}
+
+	private void SelectRowToSave() {
+		if (selectedRow != -1) {
+			int column = 0;
+
+			String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
+
+			rowToSave = ExcelFile.GetPlaceRow(value);
+
+		} else {
+			if (!txtBatteryType.getText().isEmpty()) {
+				rowToSave = ExcelFile.GetClosestFreePlace(txtBatteryType.getText());
+				if (rowToSave == -1) {
+					rowToSave = ExcelFile.GetFirstFreeRow();
 				}
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
 			}
 		}
 	}
@@ -395,7 +483,7 @@ public class IncomeView extends JDialog {
 
 	private void FillTable() throws IOException {
 
-		HashMap<Integer, PalletModel> data = ExcelFile.GetAllFreePlaces();
+		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;
 
 		defaultTableModel.setRowCount(0);
@@ -403,9 +491,9 @@ public class IncomeView extends JDialog {
 		for (Map.Entry<Integer, PalletModel> entry : data.entrySet()) {
 			pm = entry.getValue();
 
-			defaultTableModel.addRow(
-					new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(), pm.getQuantity(),
-							pm.getDestination(), pm.getIncomeDate(), pm.getIncomeTime(), pm.getIsReserved() });
+			defaultTableModel.addRow(new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(),
+					pm.getQuantity(), pm.getDestination(), BaseMethods.FormatDate(pm.getIncomeDate()),
+					pm.getIncomeTime(), pm.getStatus(), pm.getIsReserved() });
 		}
 	}
 }

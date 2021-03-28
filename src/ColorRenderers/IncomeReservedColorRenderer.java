@@ -15,19 +15,24 @@ public class IncomeReservedColorRenderer implements TableCellRenderer {
 			int row, int column) {
 		Component c = DEFAULT_RENDERER.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-		Object dtType = table.getModel().getValueAt(row, 7);
+		Object dtType = table.getModel().getValueAt(row, 8);
+		Object dtIsFree = table.getModel().getValueAt(row, 7);
 		Boolean isReserved = Boolean.parseBoolean(dtType.toString());
+		Boolean isFree = Boolean.parseBoolean(dtIsFree.toString());
 
 		if (isReserved) {
 
 			c.setBackground(Color.lightGray);
 			c.setEnabled(table.isCellEditable(row, column));
-
+		} else if (!isFree) {
+			c.setBackground(Color.lightGray);
+			c.setForeground(new Color(150, 100, 110));
 		} else if (isSelected) {
 			c.setBackground(new Color(100, 150, 237, 150));
 			c.setForeground(Color.black);
 		} else {
 			c.setBackground(Color.white);
+			c.setForeground(Color.black);
 			c.setEnabled(true);
 		}
 

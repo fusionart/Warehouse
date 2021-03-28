@@ -1,13 +1,10 @@
 package View;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import Controller.Base;
@@ -17,24 +14,22 @@ import Model.PalletModel;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+import javax.swing.JRadioButton;
 
 public class MainView extends JFrame {
 
@@ -75,7 +70,7 @@ public class MainView extends JFrame {
 		defaultTableModel.setColumnIdentifiers(header);
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 11, 1004, 706);
+		scrollPane.setBounds(10, 11, 1346, 706);
 		contentPane.add(scrollPane);
 
 		tblMain = new JTable() {
@@ -95,7 +90,7 @@ public class MainView extends JFrame {
 		BaseMethods.ResizeColumnWidth(tblMain);
 
 		JPanel pnlButtons = new JPanel();
-		pnlButtons.setBounds(544, 727, 470, 30);
+		pnlButtons.setBounds(886, 728, 470, 30);
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
 
@@ -125,6 +120,53 @@ public class MainView extends JFrame {
 		btnReference.setBounds(320, 0, 150, 30);
 		pnlButtons.add(btnReference);
 		btnReference.setFont(Base.DEFAULT_FONT);
+		
+		ButtonGroup rdbtnGroup = new ButtonGroup();
+		
+		JRadioButton rdbtnWarehouseA = new JRadioButton("Склад А");
+		rdbtnWarehouseA.setActionCommand("A");
+		rdbtnWarehouseA.setBounds(123, 735, 109, 23);
+		rdbtnWarehouseA.setFont(Base.RADIO_BUTTON_FONT);
+		contentPane.add(rdbtnWarehouseA);
+		rdbtnGroup.add(rdbtnWarehouseA);
+		rdbtnWarehouseA.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Base.AssignMainDbFile(rdbtnWarehouseA.getActionCommand());
+					FillTable();
+				}
+			}
+		});
+		
+		JRadioButton rdbtnWarehouseB = new JRadioButton("Склад В");
+		rdbtnWarehouseB.setActionCommand("B");
+		rdbtnWarehouseB.setBounds(247, 735, 109, 23);
+		rdbtnWarehouseB.setFont(Base.RADIO_BUTTON_FONT);
+		contentPane.add(rdbtnWarehouseB);
+		rdbtnGroup.add(rdbtnWarehouseB);
+		rdbtnWarehouseB.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Base.AssignMainDbFile(rdbtnWarehouseB.getActionCommand());
+					FillTable();
+				}
+			}
+		});
+		
+		JRadioButton rdbtnWarehouseC = new JRadioButton("Склад С");
+		rdbtnWarehouseC.setActionCommand("C");
+		rdbtnWarehouseC.setBounds(369, 735, 109, 23);
+		rdbtnWarehouseC.setFont(Base.RADIO_BUTTON_FONT);
+		contentPane.add(rdbtnWarehouseC);
+		rdbtnGroup.add(rdbtnWarehouseC);
+		rdbtnWarehouseC.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Base.AssignMainDbFile(rdbtnWarehouseC.getActionCommand());
+					FillTable();
+				}
+			}
+		});
 
 		SetBackgroundPicture();
 		setVisible(true);
@@ -139,7 +181,7 @@ public class MainView extends JFrame {
 		// frmMain.setComponentZOrder(lblBackground, 0);
 	}
 
-	private void FillTable() throws IOException {
+	private void FillTable() {
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;
 
@@ -149,7 +191,7 @@ public class MainView extends JFrame {
 			pm = entry.getValue();
 
 			defaultTableModel.addRow(new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(), pm.getQuantity(),
-					pm.getDestination(), pm.getStatus(), pm.getIncomeDate(), pm.getIncomeTime(),
+					pm.getDestination(), pm.getStatus(), BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(),
 					pm.getIsReserved() });
 		}
 	}

@@ -14,6 +14,8 @@ import java.util.Locale;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.swing.JOptionPane;
+
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 
@@ -26,8 +28,8 @@ public class Base {
 	private final static String MAIN_PATH = "C:\\Warehouse\\sys\\settings.ini";
 
 	// database
-	//public static LinkedHashMap<Integer, DowntimeModel> downtimeDb;
-	//public static HashMap<Integer, ActionModel> actionDb;
+	// public static LinkedHashMap<Integer, DowntimeModel> downtimeDb;
+	// public static HashMap<Integer, ActionModel> actionDb;
 
 	// combobox
 	public static String workshopFile;
@@ -44,7 +46,7 @@ public class Base {
 	public final static String STATISTICS = "statistics";
 
 	// Size
-	public final static int WIDTH = 1024;
+	public final static int WIDTH = 1366;
 	public final static int HEIGHT = 768;
 	public final static int ELEMENT_HEIGHT = 30;
 	public final static int ELEMENT_OFFSET = 37;
@@ -52,8 +54,8 @@ public class Base {
 	public final static int PANEL_WIDTH = 250;
 
 	public final static Locale LOCALE = new Locale("bg");
-	
-	public final static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+	public final static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.	yyyy");
 
 	// default fonts
 	public final static Font DEFAULT_FONT = new Font("Century Gothic", Font.BOLD, 16);
@@ -68,8 +70,14 @@ public class Base {
 	public static String logoWhite;
 	public static String icon;
 
+	private static Boolean showAllWarehouses;
+	private static String userWarehouseAccess;
+
 	// Files
-	public static String dbFile;
+	public static String mainDbFile;
+	private static String dbFileA;
+	private static String dbFileB;
+	private static String dbFileC;
 
 	// passwords
 	public static String maintenancePassword;
@@ -90,10 +98,36 @@ public class Base {
 	public static void LoadBasics() throws BackingStoreException {
 		LoadPaths();
 		AssignVariables();
-		LoadDowntimeDb();
-		LoadActionDb();
-		AssignPasswords();
-		LoadComboboxData();
+		AssignMainDbFile(userWarehouseAccess);
+	}
+
+	private static void LoadPaths() {
+		try {
+			settings = ReadIni.ParseIni(MAIN_PATH);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void AssignMainDbFile(String db) {
+		switch (db) {
+		case "A":
+			mainDbFile = dbFileA;
+			break;
+		case "B":
+			mainDbFile = dbFileB;
+			break;
+		case "C":
+			mainDbFile = dbFileC;
+			break;
+		default:
+			int result = JOptionPane.showConfirmDialog(null, "Не може да бъде зареден файл dbFile" + userWarehouseAccess,
+					"Грешка", JOptionPane.DEFAULT_OPTION);
+			if (result == JOptionPane.OK_OPTION) {
+				//System.exit(0);
+			}
+		}
 	}
 
 //	private static void AssignEmailSettings() {
@@ -119,15 +153,6 @@ public class Base {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-	}
-
-	private static void LoadPaths() {
-		try {
-			settings = ReadIni.ParseIni(MAIN_PATH);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public static void LoadDowntimeDb() {
@@ -199,13 +224,34 @@ public class Base {
 		icon = sb.toString();
 
 		sb = new StringBuilder();
-		sb.append(settings.node("dbfile").get("address", null));
+		sb.append(settings.node("dbfileA").get("address", null));
 		sb.append(BACKSLASH);
-		sb.append(settings.node("dbfile").get("name", null));
+		sb.append(settings.node("dbfileA").get("name", null));
 		sb.append(DOT);
-		sb.append(settings.node("dbfile").get("extension", null));
+		sb.append(settings.node("dbfileA").get("extension", null));
 
-		dbFile = sb.toString();
+		dbFileA = sb.toString();
 
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileB").get("address", null));
+		sb.append(BACKSLASH);
+		sb.append(settings.node("dbfileB").get("name", null));
+		sb.append(DOT);
+		sb.append(settings.node("dbfileB").get("extension", null));
+
+		dbFileB = sb.toString();
+
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileC").get("address", null));
+		sb.append(BACKSLASH);
+		sb.append(settings.node("dbfileC").get("name", null));
+		sb.append(DOT);
+		sb.append(settings.node("dbfileC").get("extension", null));
+
+		dbFileC = sb.toString();
+
+		userWarehouseAccess = settings.node("userwarehouseaccess").get("warehouse", null);
+
+		showAllWarehouses = Boolean.parseBoolean(settings.node("showallwarehouses").get("param", null));
 	}
 }
