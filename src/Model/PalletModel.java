@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
+import Controller.Base;
+
 public class PalletModel {
 
 	private int row;
@@ -18,9 +20,6 @@ public class PalletModel {
 	private LocalDate incomeDate;
 	private LocalTime incomeTime;
 	private Boolean isReserved;
-
-	private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-	private DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	public PalletModel() {
 
@@ -40,13 +39,13 @@ public class PalletModel {
 		this.isFree = Boolean.parseBoolean(temp.get(6));
 
 		if (TryParseDate(temp.get(7))) {
-			this.incomeDate = LocalDate.parse(temp.get(7), dateFormat);
+			this.incomeDate = LocalDate.parse(temp.get(7), Base.dateFormat);
 		} else {
 			this.incomeDate = null;
 		}
 
 		if (TryParseTime(temp.get(8))) {
-			this.incomeTime = LocalTime.parse(temp.get(8), timeFormat);
+			this.incomeTime = LocalTime.parse(temp.get(8), Base.timeFormat);
 		} else {
 			this.incomeTime = null;
 		}
@@ -56,7 +55,8 @@ public class PalletModel {
 
 	private int TryParseInt(String value, int defaultVal) {
 		try {
-			return Integer.parseInt(value);
+			double d = Double.parseDouble(value);
+			return (int) d;
 		} catch (NumberFormatException e) {
 			return defaultVal;
 		}
@@ -64,7 +64,7 @@ public class PalletModel {
 
 	private boolean TryParseDate(String value) {
 		try {
-			LocalDate.parse(value, dateFormat);
+			LocalDate.parse(value, Base.dateFormat);
 			return true;
 		} catch (DateTimeParseException e) {
 			return false;
@@ -73,7 +73,7 @@ public class PalletModel {
 
 	private boolean TryParseTime(String value) {
 		try {
-			LocalTime.parse(value, timeFormat);
+			LocalTime.parse(value, Base.timeFormat);
 			return true;
 		} catch (DateTimeParseException e) {
 			return false;

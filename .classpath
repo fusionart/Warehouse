@@ -16,5 +16,12 @@
 	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/poi-ooxml-lite-5.0.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/curvesapi-1.06.jar"/>
 	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/poi-ooxml-full-5.0.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derby.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbyclient.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbynet.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbyoptionaltools.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbyrun.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbyshared.jar"/>
+	<classpathentry kind="lib" path="C:/Users/darka/eclipse-workspace/Warehouse/jars/derbytools.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

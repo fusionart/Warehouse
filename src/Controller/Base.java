@@ -52,10 +52,13 @@ public class Base {
 	public final static int ELEMENT_OFFSET = 37;
 	public final static int PANEL_HEIGHT = 74;
 	public final static int PANEL_WIDTH = 250;
+	public final static int LAST_ROW = 8;
 
 	public final static Locale LOCALE = new Locale("bg");
 
-	public final static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.	yyyy");
+	public final static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+	public final static DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
+	public final static DateTimeFormatter fileNameTimeFormat = DateTimeFormatter.ofPattern("HH-mm-ss");
 
 	// default fonts
 	public final static Font DEFAULT_FONT = new Font("Century Gothic", Font.BOLD, 16);
@@ -70,14 +73,20 @@ public class Base {
 	public static String logoWhite;
 	public static String icon;
 
-	private static Boolean showAllWarehouses;
+	public static Boolean showAllWarehouses;
 	private static String userWarehouseAccess;
+	
+	public static Boolean tableExists = false;
 
 	// Files
 	public static String mainDbFile;
+	public static String mainReportAddress;
 	private static String dbFileA;
+	public static String reportAddressA;
 	private static String dbFileB;
+	public static String reportAddressB;
 	private static String dbFileC;
+	public static String reportAddressC;
 
 	// passwords
 	public static String maintenancePassword;
@@ -114,12 +123,15 @@ public class Base {
 		switch (db) {
 		case "A":
 			mainDbFile = dbFileA;
+			mainReportAddress = reportAddressA;
 			break;
 		case "B":
 			mainDbFile = dbFileB;
+			mainReportAddress = reportAddressB;
 			break;
 		case "C":
 			mainDbFile = dbFileC;
+			mainReportAddress = reportAddressC;
 			break;
 		default:
 			int result = JOptionPane.showConfirmDialog(null, "Не може да бъде зареден файл dbFile" + userWarehouseAccess,
@@ -249,6 +261,24 @@ public class Base {
 		sb.append(settings.node("dbfileC").get("extension", null));
 
 		dbFileC = sb.toString();
+		
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileA").get("report", null));
+		sb.append(BACKSLASH);
+
+		reportAddressA = sb.toString();
+
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileB").get("report", null));
+		sb.append(BACKSLASH);
+
+		reportAddressB = sb.toString();
+
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileC").get("report", null));
+		sb.append(BACKSLASH);
+
+		reportAddressC = sb.toString();
 
 		userWarehouseAccess = settings.node("userwarehouseaccess").get("warehouse", null);
 

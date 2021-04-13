@@ -1,6 +1,8 @@
 package View;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -14,6 +16,9 @@ import Model.PalletModel;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
@@ -30,6 +35,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.JRadioButton;
+import javax.swing.BoxLayout;
 
 public class MainView extends JFrame {
 
@@ -40,6 +46,7 @@ public class MainView extends JFrame {
 	private JPanel contentPane;
 	private JTable tblMain;
 	private static JLabel lblBackground;
+	private ButtonGroup rdbtnGroup;
 
 	private static DefaultTableModel defaultTableModel;
 	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
@@ -68,6 +75,68 @@ public class MainView extends JFrame {
 		defaultTableModel = new DefaultTableModel(0, 0);
 
 		defaultTableModel.setColumnIdentifiers(header);
+		
+		rdbtnGroup = new ButtonGroup();
+		
+		JPanel pnlRadioButtons = new JPanel(){
+			protected void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		pnlRadioButtons.setBorder(new TitledBorder(
+				new EtchedBorder(EtchedBorder.LOWERED, new Color(100, 149, 237), new Color(160, 160, 160)),
+				"Избор на склад", TitledBorder.LEADING, TitledBorder.TOP, Base.DEFAULT_FONT, null));
+		pnlRadioButtons.setBounds(10, 10, 370, 60);
+		pnlRadioButtons.setOpaque(false);
+		pnlRadioButtons.setBackground(new Color(255, 255, 255, 200));
+		pnlRadioButtons.setVisible(false);
+		contentPane.add(pnlRadioButtons);
+		pnlRadioButtons.setLayout(new BoxLayout(pnlRadioButtons, BoxLayout.X_AXIS));
+		
+		JRadioButton rdbtnWarehouseA = new JRadioButton("Склад А");
+		pnlRadioButtons.add(rdbtnWarehouseA);
+		rdbtnWarehouseA.setActionCommand("A");
+		rdbtnWarehouseA.setFont(Base.DEFAULT_FONT);
+		rdbtnWarehouseA.setSelected(true);
+		rdbtnGroup.add(rdbtnWarehouseA);
+		rdbtnWarehouseA.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					LoadSelectedtWarehouseData();
+					FillTable();
+				}
+			}
+		});
+		
+		JRadioButton rdbtnWarehouseB = new JRadioButton("Склад В");
+		pnlRadioButtons.add(rdbtnWarehouseB);
+		rdbtnWarehouseB.setActionCommand("B");
+		rdbtnWarehouseB.setFont(Base.DEFAULT_FONT);
+		rdbtnGroup.add(rdbtnWarehouseB);
+		rdbtnWarehouseB.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					LoadSelectedtWarehouseData();
+					FillTable();
+				}
+			}
+		});
+		
+		JRadioButton rdbtnWarehouseC = new JRadioButton("Склад С");
+		pnlRadioButtons.add(rdbtnWarehouseC);
+		rdbtnWarehouseC.setActionCommand("C");
+		rdbtnWarehouseC.setFont(Base.DEFAULT_FONT);
+		rdbtnGroup.add(rdbtnWarehouseC);
+		rdbtnWarehouseC.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					LoadSelectedtWarehouseData();
+					FillTable();
+				}
+			}
+		});
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 11, 1346, 706);
@@ -114,6 +183,22 @@ public class MainView extends JFrame {
 		JButton btnExpense = new JButton("Разход");
 		btnExpense.setBounds(160, 0, 150, 30);
 		pnlButtons.add(btnExpense);
+		btnExpense.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					ExcelFile.GetMemoryDb();
+					new OutcomeView();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
 		btnExpense.setFont(Base.DEFAULT_FONT);
 
 		JButton btnReference = new JButton("Справка");
@@ -121,52 +206,12 @@ public class MainView extends JFrame {
 		pnlButtons.add(btnReference);
 		btnReference.setFont(Base.DEFAULT_FONT);
 		
-		ButtonGroup rdbtnGroup = new ButtonGroup();
-		
-		JRadioButton rdbtnWarehouseA = new JRadioButton("Склад А");
-		rdbtnWarehouseA.setActionCommand("A");
-		rdbtnWarehouseA.setBounds(123, 735, 109, 23);
-		rdbtnWarehouseA.setFont(Base.RADIO_BUTTON_FONT);
-		contentPane.add(rdbtnWarehouseA);
-		rdbtnGroup.add(rdbtnWarehouseA);
-		rdbtnWarehouseA.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					Base.AssignMainDbFile(rdbtnWarehouseA.getActionCommand());
-					FillTable();
-				}
-			}
-		});
-		
-		JRadioButton rdbtnWarehouseB = new JRadioButton("Склад В");
-		rdbtnWarehouseB.setActionCommand("B");
-		rdbtnWarehouseB.setBounds(247, 735, 109, 23);
-		rdbtnWarehouseB.setFont(Base.RADIO_BUTTON_FONT);
-		contentPane.add(rdbtnWarehouseB);
-		rdbtnGroup.add(rdbtnWarehouseB);
-		rdbtnWarehouseB.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					Base.AssignMainDbFile(rdbtnWarehouseB.getActionCommand());
-					FillTable();
-				}
-			}
-		});
-		
-		JRadioButton rdbtnWarehouseC = new JRadioButton("Склад С");
-		rdbtnWarehouseC.setActionCommand("C");
-		rdbtnWarehouseC.setBounds(369, 735, 109, 23);
-		rdbtnWarehouseC.setFont(Base.RADIO_BUTTON_FONT);
-		contentPane.add(rdbtnWarehouseC);
-		rdbtnGroup.add(rdbtnWarehouseC);
-		rdbtnWarehouseC.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					Base.AssignMainDbFile(rdbtnWarehouseC.getActionCommand());
-					FillTable();
-				}
-			}
-		});
+		if (Base.showAllWarehouses) {
+			pnlRadioButtons.setVisible(true);
+			scrollPane.setBounds(10, 80, 1346, 626);
+			LoadSelectedtWarehouseData();
+			FillTable();
+		}
 
 		SetBackgroundPicture();
 		setVisible(true);
@@ -181,6 +226,21 @@ public class MainView extends JFrame {
 		// frmMain.setComponentZOrder(lblBackground, 0);
 	}
 
+	private void LoadSelectedtWarehouseData() {
+		switch (rdbtnGroup.getSelection().getActionCommand()) {
+		case "A":
+			Base.AssignMainDbFile(rdbtnGroup.getSelection().getActionCommand());
+			break;
+		case "B":
+			Base.AssignMainDbFile(rdbtnGroup.getSelection().getActionCommand());
+			break;
+		case "C":
+			Base.AssignMainDbFile(rdbtnGroup.getSelection().getActionCommand());
+			break;
+		default:
+			break;
+		}
+	}
 	private void FillTable() {
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;
