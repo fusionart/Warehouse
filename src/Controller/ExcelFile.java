@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.JOptionPane;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.util.CellReference;
@@ -67,7 +69,6 @@ public class ExcelFile {
 	public static void CheckIfFileIsEdited() {
 		File file = new File(Base.mainDbFile);
 		long currentTimeStamp = file.lastModified();
-
 		if (currentTimeStamp != timeStamp) {
 			ReadExcelFile();
 			ReadAllRows();
@@ -100,12 +101,15 @@ public class ExcelFile {
 		}
 	}
 
-	public static void FillOutcomeReport(PalletModel pm) throws IOException {
-		
-		String fileName = pm.getPalletName() + "_" + Base.dateFormat.format(LocalDate.now()) + "_" + Base.fileNameTimeFormat.format(LocalTime.now());
-		
+	public static void FillOutcomeReport(List<PalletModel> pmList) throws IOException {
+		PalletModel pmTemp = pmList.get(0);
+		int i = 1;
+
+		String fileName = pmTemp.getPalletName() + "_" + Base.dateFormat.format(LocalDate.now()) + "_"
+				+ Base.fileNameTimeFormat.format(LocalTime.now());
+
 		CreateNewWorkbook(fileName);
-		
+
 		FileInputStream file = new FileInputStream(new File(Base.mainReportAddress + fileName + ".xlsx"));
 		XSSFWorkbook workbook = new XSSFWorkbook(file);
 		XSSFSheet sheet = workbook.getSheetAt(0);
@@ -115,10 +119,18 @@ public class ExcelFile {
 
 		// This data needs to be written (Object[])
 		Map<String, Object[]> empinfo = new TreeMap<String, Object[]>();
-		empinfo.put("1", new Object[] { "PalletName", "BatteryType", "QuantityReal", "Quantity", "Destination",
-				"IsFree", "Date", "Time", "IsReserved" });
-		empinfo.put("2", new Object[] { pm.getPalletName(), pm.getBatteryType(), String.valueOf(pm.getQuantityReal()), String.valueOf(pm.getQuantity()),
-				pm.getDestination(), pm.getStatus().toString(), Base.dateFormat.format(LocalDate.now()), Base.fileNameTimeFormat.format(LocalTime.now()), pm.getIsReserved().toString() });
+		empinfo.put(String.valueOf(i), new Object[] { "PalletName", "BatteryType", "QuantityReal", "Quantity",
+				"Production Date", "Date", "Time" });
+
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pm = (PalletModel) itr.next();
+			i++;
+			empinfo.put(String.valueOf(i),
+					new Object[] { pm.getPalletName(), pm.getBatteryType(), String.valueOf(pm.getQuantityReal()),
+							String.valueOf(pm.getQuantity()), Base.dateFormat.format(pm.getProductionDate()),
+							Base.dateFormat.format(LocalDate.now()), Base.fileNameTimeFormat.format(LocalTime.now()) });
+		}
 
 		// Iterate over data and write to sheet
 		Set<String> keyid = empinfo.keySet();
@@ -141,6 +153,77 @@ public class ExcelFile {
 		out.close();
 	}
 
+	public static void SaveDataAtOutcome(List<PalletModel> pmList, int quantityLeft) throws IOException {
+		FileInputStream file = new FileInputStream(new File(Base.mainDbFile));
+		XSSFWorkbook workbook = new XSSFWorkbook(file);
+		XSSFSheet sheet = workbook.getSheetAt(0);
+
+//		Cell cell2Update = sheet.getRow(1).getCell(3);
+//		cell2Update.setCellValue(49);
+
+		XSSFCell cellToUpdate;
+
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pm = (PalletModel) itr.next();
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(1, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(pm.getBatteryType());
+			} else {
+				cellToUpdate.setCellValue(""); //clear Battery type
+			}
+			
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(String.valueOf(quantityLeft));
+			} else {
+				cellToUpdate.setCellValue(""); //clear Quantity real
+			}
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(String.valueOf(quantityLeft));
+			} else {
+				cellToUpdate.setCellValue(""); //clear Quantity
+			}
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getProductionDate()));
+			} else {
+				cellToUpdate.setCellValue(""); //clear Production date
+			}
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(5, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getStatus());
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(6, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getIncomeDate()));
+			} else {
+				cellToUpdate.setCellValue(""); //clear Income date
+			}			
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(7, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			
+			if (quantityLeft != 0) {
+				cellToUpdate.setCellValue(BaseMethods.FormatTime(pm.getIncomeTime()));
+			} else {
+				cellToUpdate.setCellValue(""); //clear Production time
+			}			
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(8, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getIsReserved());
+		}
+		file.close();
+
+		FileOutputStream outputStream = new FileOutputStream(Base.mainDbFile);
+		workbook.write(outputStream);
+		workbook.close();
+		outputStream.close();
+	}
+
 	public static void SaveData(PalletModel pm) throws IOException {
 		FileInputStream file = new FileInputStream(new File(Base.mainDbFile));
 		XSSFWorkbook workbook = new XSSFWorkbook(file);
@@ -161,7 +244,7 @@ public class ExcelFile {
 		cellToUpdate.setCellValue(pm.getQuantity());
 
 		cellToUpdate = sheet.getRow(pm.getRow()).getCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-		cellToUpdate.setCellValue(pm.getDestination());
+		cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getProductionDate()));
 
 		cellToUpdate = sheet.getRow(pm.getRow()).getCell(5, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 		cellToUpdate.setCellValue(pm.getStatus());
@@ -185,7 +268,6 @@ public class ExcelFile {
 
 	private static void ReadAllRows() {
 		Sheet sheet = GetSheet();
-
 		allRows = new HashMap<>();
 		int i = 0;
 		for (Row row : sheet) {
@@ -238,7 +320,7 @@ public class ExcelFile {
 			e.printStackTrace();
 		}
 
-		String URL = "jdbc:derby:memory:warehouseDb;create=true";
+		String URL = "jdbc:derby:" + Base.DB_PATH + "warehouseDb;create=true";
 
 		try {
 			connection = DriverManager.getConnection(URL);
@@ -252,7 +334,6 @@ public class ExcelFile {
 
 	private static void CreateTable() {
 		if (!tableExists) {
-
 			Connection connection = null;
 			Statement statement = null;
 
@@ -268,11 +349,11 @@ public class ExcelFile {
 
 			String query = "CREATE TABLE " + TABLE_NAME + "( " + "Id INT NOT NULL GENERATED ALWAYS AS IDENTITY, "
 					+ "Row VARCHAR(10), " + "PalletName VARCHAR(50), " + "BatteryType VARCHAR(50), "
-					+ "QuantityReal Int, " + "Quantity Int, " + "Destination VARCHAR(50), " + "IsFree VARCHAR(5), "
+					+ "QuantityReal Int, " + "Quantity Int, " + "ProductionDate VARCHAR(50), " + "IsFree VARCHAR(5), "
 					+ "Date VARCHAR(50), " + "Time VARCHAR(50), " + "IsReserved VARCHAR(5), " + "PRIMARY KEY (Id))";
 			try {
-				statement.executeUpdate(query);
 				tableExists = true;
+				statement.executeUpdate(query);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -304,9 +385,9 @@ public class ExcelFile {
 		}
 
 		String query = "INSERT INTO " + TABLE_NAME
-				+ "(Row, PalletName, BatteryType, QuantityReal, Quantity, Destination, IsFree, Date, Time, IsReserved) VALUES "
+				+ "(Row, PalletName, BatteryType, QuantityReal, Quantity, ProductionDate, IsFree, Date, Time, IsReserved) VALUES "
 				+ "('" + pm.getRow() + "','" + pm.getPalletName() + "','" + pm.getBatteryType() + "',"
-				+ pm.getQuantityReal() + "," + pm.getQuantity() + ",'" + pm.getDestination() + "','" + pm.getStatus()
+				+ pm.getQuantityReal() + "," + pm.getQuantity() + ",'" + pm.getProductionDate() + "','" + pm.getStatus()
 				+ "','" + pm.getIncomeDate() + "','" + pm.getIncomeTime() + "','" + pm.getIsReserved() + "')";
 		try {
 			statement.executeUpdate(query);
@@ -368,6 +449,43 @@ public class ExcelFile {
 		}
 
 		return data;
+	}
+
+	public static int FintPalletRow(String text) {
+		Connection connection = null;
+		Statement statement = null;
+
+		int row = -1;
+
+		connection = getConnection();
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String query = "SELECT * FROM " + TABLE_NAME + " WHERE PalletName='" + text + "'";
+		ResultSet rs;
+		try {
+			rs = statement.executeQuery(query);
+			while (rs.next()) {
+				row = Integer.parseInt(rs.getString("Row"));
+			}
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		try {
+			statement.close();
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return row;
 	}
 
 	public static HashMap<Integer, PalletModel> FilterBatteryType(String text) {

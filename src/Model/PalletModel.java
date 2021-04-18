@@ -17,6 +17,7 @@ public class PalletModel {
 	private int quantity;
 	private String destination;
 	private Boolean isFree;
+	private LocalDate productionDate;
 	private LocalDate incomeDate;
 	private LocalTime incomeTime;
 	private Boolean isReserved;
@@ -35,7 +36,12 @@ public class PalletModel {
 
 		this.quantity = TryParseInt(temp.get(4), 0);
 
-		this.destination = temp.get(5);
+		if (TryParseDate(temp.get(5))) {
+			this.productionDate = LocalDate.parse(temp.get(5), Base.dateFormat);
+		} else {
+			this.productionDate = null;
+		}
+		
 		this.isFree = Boolean.parseBoolean(temp.get(6));
 
 		if (TryParseDate(temp.get(7))) {
@@ -134,6 +140,14 @@ public class PalletModel {
 
 	public void setStatus(Boolean status) {
 		this.isFree = status;
+	}
+
+	public LocalDate getProductionDate() {
+		return productionDate;
+	}
+
+	public void setProductionDate(LocalDate productionDate) {
+		this.productionDate = productionDate;
 	}
 
 	public LocalDate getIncomeDate() {

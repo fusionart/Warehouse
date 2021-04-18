@@ -50,7 +50,7 @@ public class MainView extends JFrame {
 
 	private static DefaultTableModel defaultTableModel;
 	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
-			"Направление", "Статус", "Дата на приход", "Час на приход", "Резервация" };
+			"Дата на производство", "Статус", "Дата на приход", "Час на приход", "Резервация" };
 
 	/**
 	 * Create the frame.
@@ -251,7 +251,7 @@ public class MainView extends JFrame {
 			pm = entry.getValue();
 
 			defaultTableModel.addRow(new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(), pm.getQuantity(),
-					pm.getDestination(), pm.getStatus(), BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(),
+					BaseMethods.FormatDate(pm.getProductionDate()), pm.getStatus(), BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(),
 					pm.getIsReserved() });
 		}
 	}

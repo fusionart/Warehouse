@@ -26,6 +26,7 @@ public class Base {
 
 	// Paths
 	private final static String MAIN_PATH = "C:\\Warehouse\\sys\\settings.ini";
+	public final static String DB_PATH = "C:\\Warehouse\\DB\\";
 
 	// database
 	// public static LinkedHashMap<Integer, DowntimeModel> downtimeDb;

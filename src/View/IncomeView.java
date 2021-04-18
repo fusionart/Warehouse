@@ -63,7 +63,7 @@ public class IncomeView extends JDialog {
 
 	private static DefaultTableModel defaultTableModel;
 	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
-			"Направление", "Дата на приход", "Час на приход", "Статус", "Резервация" };
+			"Дата на производство", "Дата на приход", "Час на приход", "Статус", "Резервация" };
 
 	/**
 	 * Create the frame.
@@ -404,11 +404,14 @@ public class IncomeView extends JDialog {
 		pm.setBatteryType(txtBatteryType.getText());
 		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
 		pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
-		pm.setIncomeDate(LocalDate.parse(txtDate.getText(), Base.dateFormat));
+		pm.setProductionDate(LocalDate.parse(txtDate.getText(), Base.dateFormat));
+		pm.setIncomeDate(LocalDate.now());
 		pm.setIncomeTime(LocalTime.now());
 		pm.setStatus(false);
 		pm.setIsReserved(false);
 		pm.setDestination(null);
+		
+		selectedRow = -1;
 
 		ExcelFile.SaveData(pm);
 		ShowNotify(pm);
@@ -492,7 +495,7 @@ public class IncomeView extends JDialog {
 			pm = entry.getValue();
 
 			defaultTableModel.addRow(new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(),
-					pm.getQuantity(), pm.getDestination(), BaseMethods.FormatDate(pm.getIncomeDate()),
+					pm.getQuantity(), BaseMethods.FormatDate(pm.getProductionDate()), BaseMethods.FormatDate(pm.getIncomeDate()),
 					pm.getIncomeTime(), pm.getStatus(), pm.getIsReserved() });
 		}
 	}
