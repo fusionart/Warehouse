@@ -50,6 +50,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class OutcomeView extends JDialog implements TableModelListener {
 
@@ -67,7 +69,8 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private int selectedQuantity;
 	private int rowsChecked;
-
+	private Boolean isFiltered = false;
+	
 	private static int excelFileRow;
 
 	private static DefaultTableModel defaultTableModel;
@@ -105,18 +108,21 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		pnlButtons.setLayout(null);
 
 		JButton btnSave = new JButton("Запази");
+		btnSave.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					SaveData();
+				}
+			}
+		});
 		btnSave.setBounds(0, 0, 150, 30);
 		pnlButtons.add(btnSave);
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					// if (ValidateForm()) {
-					SaveData();
-					// }
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				// if (ValidateForm()) {
+				SaveData();
+				// }
 			}
 		});
 		btnSave.setFont(Base.DEFAULT_FONT);
@@ -170,10 +176,13 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		txtBatteryType.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtBatteryType.getText().isEmpty()) {
+				if (!txtBatteryType.getText().trim().isEmpty()) {
 					FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
+					isFiltered = true;
 				} else {
-					FillTable();
+					if (txtPallet.getText().trim().isEmpty() && isFiltered) {
+						FillTable();
+					}
 				}
 			}
 		});
@@ -209,10 +218,13 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		txtPallet.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtPallet.getText().isEmpty()) {
+				if (!txtPallet.getText().trim().isEmpty()) {
 					FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
+					isFiltered = true;
 				} else {
-					FillTable();
+					if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
+						FillTable();
+					}
 				}
 			}
 		});
@@ -312,7 +324,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		scrollPane.setViewportView(tblMain);
 		tblMain.setModel(defaultTableModel);
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		tblMain.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		tblMain.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblMain.getModel().addTableModelListener(this);
 		FillTable();
 		BaseMethods.ResizeColumnWidth(tblMain);
@@ -348,7 +360,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private void AddToListForSave(int row) {
 		PalletModel pm = new PalletModel();
 
-		pm.setRow(ExcelFile.FintPalletRow(tblMain.getModel().getValueAt(row, 1).toString()));
+		pm.setRow(ExcelFile.FindPalletRow(tblMain.getModel().getValueAt(row, 1).toString()));
 		pm.setPalletName(tblMain.getModel().getValueAt(row, 1).toString());
 		pm.setBatteryType(tblMain.getModel().getValueAt(row, 2).toString());
 		pm.setQuantityReal(Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString()));
@@ -393,7 +405,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		}
 	}
 
-	private void SaveData() throws IOException {
+	private void SaveData() {
 
 		Boolean readyToSave = true;
 		int quantityLeft = 0;
@@ -406,7 +418,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 				pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
 				pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
 				pm.setStatus(false);
-				
+
 				pmList.remove(0);
 				pmList.add(pm);
 			}
@@ -414,6 +426,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 		if (readyToSave) {
 			ExcelFile.SaveDataAtOutcome(pmList, quantityLeft);
+			ExcelFile.UpdateTable(pmList, quantityLeft);
 			ExcelFile.FillOutcomeReport(pmList);
 			ShowNotify(pmList);
 		}
@@ -424,7 +437,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	}
 
-	private void ShowNotify(List<PalletModel> pm) throws IOException {
+	private void ShowNotify(List<PalletModel> pm) {
 		StringBuilder sb = new StringBuilder();
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {

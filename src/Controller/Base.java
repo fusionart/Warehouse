@@ -88,6 +88,11 @@ public class Base {
 	public static String reportAddressB;
 	private static String dbFileC;
 	public static String reportAddressC;
+	
+	//Warehouses names
+	public static String warehouseAName;
+	public static String warehouseBName;
+	public static String warehouseCName;
 
 	// passwords
 	public static String maintenancePassword;
@@ -280,7 +285,22 @@ public class Base {
 		sb.append(BACKSLASH);
 
 		reportAddressC = sb.toString();
+		
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileA").get("warehousename", null));
 
+		warehouseAName = sb.toString();
+
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileB").get("warehousename", null));
+
+		warehouseBName = sb.toString();
+
+		sb = new StringBuilder();
+		sb.append(settings.node("dbfileC").get("warehousename", null));
+
+		warehouseCName = sb.toString();
+		
 		userWarehouseAccess = settings.node("userwarehouseaccess").get("warehouse", null);
 
 		showAllWarehouses = Boolean.parseBoolean(settings.node("showallwarehouses").get("param", null));

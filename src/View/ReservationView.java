@@ -8,11 +8,16 @@ import java.awt.Toolkit;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import ColorRenderers.IncomeReservedColorRenderer;
 import Controller.Base;
@@ -20,6 +25,7 @@ import Controller.BaseMethods;
 import Controller.ExcelFile;
 import Model.PalletModel;
 
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -36,34 +42,43 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+
 import java.awt.BorderLayout;
 import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.JRadioButton;
 
-public class IncomeView extends JDialog {
+public class ReservationView extends JDialog implements TableModelListener {
 
 	private JPanel contentPane;
 	private JTextField txtBatteryType;
-	private JTextField txtDate;
+	private JTextField txtPallet;
 	private JTextField txtQuantity;
-	private JTextField txtQuantityReal;
 	private JTable tblMain;
 	private JLabel lblBackground;
-	private JLabel lblPalletPlace;
-	private JPanel pnlPalletPlace;
 
 	private static int selectedRow = -1;
 	private static int rowToSave;
 
+	private List<PalletModel> pmList = new ArrayList<>();
+
+	private int selectedQuantity;
+	private int rowsChecked;
+	private Boolean isFiltered = false;
+	JPanel pnlPalletPlace;
+	JLabel lblPalletPlace;
+
 	private static int excelFileRow;
 
 	private static DefaultTableModel defaultTableModel;
-	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
+	private static String header[] = { "Избор", "Складово място", "Тип батерия", "Количество", "Количество по документ",
 			"Дата на производство", "Дата на приход", "Час на приход", "Статус", "Резервация" };
 
 	/**
@@ -71,7 +86,11 @@ public class IncomeView extends JDialog {
 	 * 
 	 * @throws IOException
 	 */
-	public IncomeView() throws IOException {
+	public ReservationView() throws IOException {
+
+		int selectedQuantity;
+
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
 		setIconImage(frameIcon);
 		setTitle(Base.FRAME_CAPTION);
@@ -97,9 +116,7 @@ public class IncomeView extends JDialog {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					if (ValidateForm()) {
-						SaveData();
-					}
+					SaveData();
 				}
 			}
 		});
@@ -107,9 +124,9 @@ public class IncomeView extends JDialog {
 		pnlButtons.add(btnSave);
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (ValidateForm()) {
-					SaveData();
-				}
+				// if (ValidateForm()) {
+				SaveData();
+				// }
 			}
 		});
 		btnSave.setFont(Base.DEFAULT_FONT);
@@ -140,7 +157,7 @@ public class IncomeView extends JDialog {
 		pnlInput.setLayout(null);
 
 		JPanel pnlBatteryType = new JPanel();
-		pnlBatteryType.setBounds(20, 0, 250, 74);
+		pnlBatteryType.setBounds(20, 117, 250, 74);
 		pnlInput.add(pnlBatteryType);
 		pnlBatteryType.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlBatteryType = new GridBagLayout();
@@ -150,7 +167,7 @@ public class IncomeView extends JDialog {
 		gbl_pnlBatteryType.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
 		pnlBatteryType.setLayout(gbl_pnlBatteryType);
 
-		JLabel lblBatteryType = new JLabel("Тип Батерия");
+		JLabel lblBatteryType = new JLabel("Описание");
 		GridBagConstraints gbc_lblBatteryType = new GridBagConstraints();
 		gbc_lblBatteryType.fill = GridBagConstraints.BOTH;
 		gbc_lblBatteryType.insets = new Insets(0, 0, 5, 0);
@@ -160,20 +177,15 @@ public class IncomeView extends JDialog {
 		lblBatteryType.setFont(Base.DEFAULT_FONT);
 
 		txtBatteryType = new JTextField();
-		txtBatteryType.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				txtDate.requestFocus();
-			}
-		});
 		txtBatteryType.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtBatteryType.getText().isEmpty()) {
-					SelectRowToSave();
-					if (selectedRow > 0) {
-						SetTextForManualSelected();
-					} else {
-						SetTextForAutomaticSelected();
+				if (!txtBatteryType.getText().trim().isEmpty()) {
+					FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
+					isFiltered = true;
+				} else {
+					if (txtPallet.getText().trim().isEmpty() && isFiltered) {
+						FillTable();
 					}
 				}
 			}
@@ -186,52 +198,60 @@ public class IncomeView extends JDialog {
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
 
-		JPanel pnlDate = new JPanel();
-		pnlDate.setBounds(20, 85, 250, 74);
-		pnlInput.add(pnlDate);
-		pnlDate.setBackground(new Color(255, 255, 255, 0));
-		GridBagLayout gbl_pnlDate = new GridBagLayout();
-		gbl_pnlDate.columnWidths = new int[] { 115, 0 };
-		gbl_pnlDate.rowHeights = new int[] { 37, 37, 0 };
-		gbl_pnlDate.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gbl_pnlDate.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
-		pnlDate.setLayout(gbl_pnlDate);
+		JPanel pnlPallet = new JPanel();
+		pnlPallet.setBounds(20, 32, 250, 74);
+		pnlInput.add(pnlPallet);
+		pnlPallet.setBackground(new Color(255, 255, 255, 0));
+		GridBagLayout gbl_pnlPallet = new GridBagLayout();
+		gbl_pnlPallet.columnWidths = new int[] { 89, 0 };
+		gbl_pnlPallet.rowHeights = new int[] { 37, 37, 0 };
+		gbl_pnlPallet.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+		gbl_pnlPallet.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
+		pnlPallet.setLayout(gbl_pnlPallet);
 
-		JLabel lblDate = new JLabel("Дата на производство (dd.mm.yyyy)");
-		GridBagConstraints gbc_lblDate = new GridBagConstraints();
-		gbc_lblDate.fill = GridBagConstraints.BOTH;
-		gbc_lblDate.insets = new Insets(0, 0, 5, 0);
-		gbc_lblDate.gridx = 0;
-		gbc_lblDate.gridy = 0;
-		pnlDate.add(lblDate, gbc_lblDate);
-		lblDate.setFont(Base.DEFAULT_FONT);
+		JLabel lblPallet = new JLabel("Складово място");
+		GridBagConstraints gbc_lblPallet = new GridBagConstraints();
+		gbc_lblPallet.fill = GridBagConstraints.BOTH;
+		gbc_lblPallet.insets = new Insets(0, 0, 5, 0);
+		gbc_lblPallet.gridx = 0;
+		gbc_lblPallet.gridy = 0;
+		pnlPallet.add(lblPallet, gbc_lblPallet);
+		lblPallet.setFont(Base.DEFAULT_FONT);
 
-		txtDate = new JTextField();
-		txtDate.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				txtQuantityReal.requestFocus();
+		txtPallet = new JTextField();
+		txtPallet.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (!txtPallet.getText().trim().isEmpty()) {
+					FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
+					isFiltered = true;
+				} else {
+					if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
+						FillTable();
+					}
+				}
 			}
 		});
-		GridBagConstraints gbc_txtDate = new GridBagConstraints();
-		gbc_txtDate.fill = GridBagConstraints.BOTH;
-		gbc_txtDate.gridx = 0;
-		gbc_txtDate.gridy = 1;
-		pnlDate.add(txtDate, gbc_txtDate);
-		txtDate.setFont(Base.DEFAULT_FONT);
-		txtDate.setColumns(10);
+		GridBagConstraints gbc_txtPallet = new GridBagConstraints();
+		gbc_txtPallet.fill = GridBagConstraints.BOTH;
+		gbc_txtPallet.gridx = 0;
+		gbc_txtPallet.gridy = 1;
+		pnlPallet.add(txtPallet, gbc_txtPallet);
+		txtPallet.setFont(Base.DEFAULT_FONT);
+		txtPallet.setColumns(10);
 
 		JPanel pnlQuantity = new JPanel();
-		pnlQuantity.setBounds(20, 255, 250, 74);
+		pnlQuantity.setBounds(20, 202, 250, 74);
 		pnlInput.add(pnlQuantity);
 		pnlQuantity.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlQuantity = new GridBagLayout();
-		gbl_pnlQuantity.columnWidths = new int[] { 89, 0 };
+		gbl_pnlQuantity.columnWidths = new int[] { 108, 0 };
 		gbl_pnlQuantity.rowHeights = new int[] { 37, 37, 0 };
 		gbl_pnlQuantity.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
 		gbl_pnlQuantity.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
 		pnlQuantity.setLayout(gbl_pnlQuantity);
 
-		JLabel lblQuantity = new JLabel("Количество по документ");
+		JLabel lblQuantity = new JLabel("Количество");
 		GridBagConstraints gbc_lblQuantity = new GridBagConstraints();
 		gbc_lblQuantity.fill = GridBagConstraints.BOTH;
 		gbc_lblQuantity.insets = new Insets(0, 0, 5, 0);
@@ -241,11 +261,6 @@ public class IncomeView extends JDialog {
 		lblQuantity.setFont(Base.DEFAULT_FONT);
 
 		txtQuantity = new JTextField();
-		txtQuantity.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				btnSave.requestFocus();
-			}
-		});
 		GridBagConstraints gbc_txtQuantity = new GridBagConstraints();
 		gbc_txtQuantity.fill = GridBagConstraints.BOTH;
 		gbc_txtQuantity.gridx = 0;
@@ -269,56 +284,21 @@ public class IncomeView extends JDialog {
 			}
 		});
 
-		JPanel pnlQuantityReal = new JPanel();
-		pnlQuantityReal.setBounds(20, 170, 250, 74);
-		pnlInput.add(pnlQuantityReal);
-		pnlQuantityReal.setBackground(new Color(255, 255, 255, 0));
-		GridBagLayout gbl_pnlQuantityReal = new GridBagLayout();
-		gbl_pnlQuantityReal.columnWidths = new int[] { 108, 0 };
-		gbl_pnlQuantityReal.rowHeights = new int[] { 37, 37, 0 };
-		gbl_pnlQuantityReal.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gbl_pnlQuantityReal.rowWeights = new double[] { 0.0, 0.0, Double.MIN_VALUE };
-		pnlQuantityReal.setLayout(gbl_pnlQuantityReal);
+		ButtonGroup rdbtnGroup = new ButtonGroup();
 
-		JLabel lblQuantityReal = new JLabel("Реално количество");
-		GridBagConstraints gbc_lblQuantityReal = new GridBagConstraints();
-		gbc_lblQuantityReal.fill = GridBagConstraints.BOTH;
-		gbc_lblQuantityReal.insets = new Insets(0, 0, 5, 0);
-		gbc_lblQuantityReal.gridx = 0;
-		gbc_lblQuantityReal.gridy = 0;
-		pnlQuantityReal.add(lblQuantityReal, gbc_lblQuantityReal);
-		lblQuantityReal.setFont(Base.DEFAULT_FONT);
+		JRadioButton rdbtnIncome = new JRadioButton("Приход");
+		rdbtnIncome.setBounds(20, 303, 109, 23);
+		rdbtnIncome.setActionCommand("Income");
+		rdbtnIncome.setFont(Base.DEFAULT_FONT);
+		rdbtnGroup.add(rdbtnIncome);
+		pnlInput.add(rdbtnIncome);
 
-		txtQuantityReal = new JTextField();
-		txtQuantityReal.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				txtQuantity.requestFocus();
-			}
-		});
-		GridBagConstraints gbc_txtQuantityReal = new GridBagConstraints();
-		gbc_txtQuantityReal.fill = GridBagConstraints.BOTH;
-		gbc_txtQuantityReal.gridx = 0;
-		gbc_txtQuantityReal.gridy = 1;
-		pnlQuantityReal.add(txtQuantityReal, gbc_txtQuantityReal);
-		txtQuantityReal.setFont(Base.DEFAULT_FONT);
-		txtQuantityReal.setColumns(10);
-		txtQuantityReal.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (!txtQuantityReal.getText().equals("")) {
-					Boolean isNumber = BaseMethods.CheckIsNumber(txtQuantityReal.getText());
-					if (!isNumber) {
-						txtQuantityReal.setText("");
-						txtQuantityReal.requestFocus();
-					} else if (BaseMethods.CheckIfNegative(txtQuantityReal.getText())) {
-						txtQuantityReal.setText("");
-						txtQuantityReal.requestFocus();
-					} else {
-						txtQuantity.setText(txtQuantityReal.getText());
-					}
-				}
-			}
-		});
+		JRadioButton rdbtnOutcome = new JRadioButton("Разход");
+		rdbtnOutcome.setBounds(141, 303, 109, 23);
+		rdbtnOutcome.setActionCommand("Outcome");
+		rdbtnOutcome.setFont(Base.DEFAULT_FONT);
+		rdbtnGroup.add(rdbtnOutcome);
+		pnlInput.add(rdbtnOutcome);
 
 		pnlPalletPlace = new JPanel() {
 			protected void paintComponent(Graphics g) {
@@ -350,13 +330,30 @@ public class IncomeView extends JDialog {
 		defaultTableModel.setColumnIdentifiers(header);
 
 		tblMain = new JTable() {
+			@Override
 			public boolean isCellEditable(int row, int column) {
-				return false;
+				Boolean isFree = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 8).toString());
+
+				if (isFree) {
+					return column == 0;
+				} else {
+					return false;
+				}
 			};
 
 			@Override
 			public void changeSelection(int rowIndex, int columnIndex, boolean toggle, boolean extend) {
 				super.changeSelection(rowIndex, columnIndex, true, false);
+			}
+
+			@Override
+			public Class getColumnClass(int column) {
+				switch (column) {
+				case 0:
+					return Boolean.class;
+				default:
+					return String.class;
+				}
 			}
 		};
 		tblMain.addMouseListener(new MouseAdapter() {
@@ -365,30 +362,24 @@ public class IncomeView extends JDialog {
 				selectedRow = tblMain.getSelectedRow();
 
 				if (selectedRow != -1) {
-					int reservedColumn = 8;
-					int statusColumn = 7;
+					int reservedColumn = 9;
+					int statusColumn = 8;
 
 					Boolean isReserved = Boolean
 							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, reservedColumn).toString());
 					Boolean isFree = Boolean
 							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, statusColumn).toString());
 
-					if (isReserved || !isFree) {
+					if (!isFree) {
 						selectedRow = -1;
 					}
 				}
 
-				SelectRowToSave();
-
 				if (selectedRow != -1) {
 					SetTextForManualSelected();
 				} else {
-					if (!txtBatteryType.getText().isEmpty()) {
-						SetTextForAutomaticSelected();
-					} else {
-						lblPalletPlace.setText("");
-						pnlPalletPlace.setVisible(false);
-					}
+					lblPalletPlace.setText("");
+					pnlPalletPlace.setVisible(false);
 				}
 			}
 		});
@@ -401,105 +392,154 @@ public class IncomeView extends JDialog {
 		tblMain.setModel(defaultTableModel);
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		tblMain.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tblMain.getModel().addTableModelListener(this);
 		FillTable();
 		BaseMethods.ResizeColumnWidth(tblMain);
-		IncomeReservedColorRenderer ircr = new IncomeReservedColorRenderer();
-		tblMain.setDefaultRenderer(Object.class, ircr);
+		// IncomeReservedColorRenderer ircr = new IncomeReservedColorRenderer();
+		// tblMain.setDefaultRenderer(Object.class, ircr);
 
 		SetBackgroundPicture();
 		setVisible(true);
+
+	}
+
+	public void tableChanged(TableModelEvent e) {
+		int row = e.getFirstRow();
+		int column = e.getColumn();
+		if (column == 0) {
+			TableModel model = (TableModel) e.getSource();
+			String columnName = model.getColumnName(column);
+			Boolean checked = (Boolean) model.getValueAt(row, column);
+			if (checked) {
+				AddToListForSave(row);
+			} else {
+				RemoveFromListForSave(row);
+			}
+		}
+	}
+
+	private void AddToListForSave(int row) {
+		PalletModel pm = new PalletModel();
+
+		pm.setRow(ExcelFile.FindPalletRow(tblMain.getModel().getValueAt(row, 1).toString()));
+		pm.setPalletName(tblMain.getModel().getValueAt(row, 1).toString());
+		pm.setBatteryType(tblMain.getModel().getValueAt(row, 2).toString());
+		pm.setQuantityReal(Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString()));
+		pm.setQuantity(Integer.parseInt(tblMain.getModel().getValueAt(row, 4).toString()));
+		// pm.setProductionDate(LocalDate.parse(tblMain.getModel().getValueAt(row,
+		// 5).toString(), Base.dateFormat));
+		pm.setIncomeDate(LocalDate.now());
+		pm.setIncomeTime(LocalTime.now());
+		pm.setStatus(true);
+		pm.setIsReserved(false);
+
+		selectedQuantity += Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString());
+		rowsChecked++;
+		QuantityTextboxEdit();
+
+		pmList.add(pm);
+	}
+
+	private void RemoveFromListForSave(int row) {
+
+		String palletName = tblMain.getModel().getValueAt(row, 1).toString();
+
+		selectedQuantity -= Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString());
+		rowsChecked--;
+		QuantityTextboxEdit();
+
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pm = (PalletModel) itr.next();
+			if (pm.getPalletName().equals(palletName)) {
+				itr.remove();
+				break;
+			}
+		}
+	}
+
+	private void QuantityTextboxEdit() {
+		txtQuantity.setText(String.valueOf(selectedQuantity));
+		if (rowsChecked > 1) {
+			txtQuantity.setEditable(false);
+		} else {
+			txtQuantity.setEditable(true);
+		}
+	}
+
+	private void SaveData() {
+
+		Boolean readyToSave = true;
+		int quantityLeft = 0;
+		// Save the left quantity in the working Excel warehouse db file
+		if (rowsChecked == 1) {
+			PalletModel pm = pmList.get(0);
+			readyToSave = ValidateQuantity(pm);
+			if (readyToSave && (pm.getQuantityReal() - Integer.parseInt(txtQuantity.getText()) != 0)) {
+				quantityLeft = pm.getQuantityReal() - Integer.parseInt(txtQuantity.getText());
+				pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
+				pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
+				pm.setStatus(false);
+
+				pmList.remove(0);
+				pmList.add(pm);
+			}
+		}
+
+		if (readyToSave) {
+			ExcelFile.SaveDataAtOutcome(pmList, quantityLeft);
+			ExcelFile.UpdateTable(pmList, quantityLeft);
+			ExcelFile.FillOutcomeReport(pmList);
+			ShowNotify(pmList);
+		}
+
+		// Set the quantity for the Outcome report Excel file
+		// pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
+		// pm.setQuantity(Integer.parseInt(txtPallet.getText()));
+
+	}
+
+	private void ShowNotify(List<PalletModel> pm) {
+		StringBuilder sb = new StringBuilder();
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pmTemp = (PalletModel) itr.next();
+			sb.append("Складово място: ");
+			sb.append(pmTemp.getPalletName());
+			sb.append(", Тип Батерия: ");
+			sb.append(pmTemp.getBatteryType());
+			sb.append(", Количество: ");
+			sb.append(pmTemp.getQuantityReal());
+			sb.append("<br>");
+		}
+
+		int result = JOptionPane.showConfirmDialog(null, "<html>Изписано количество: <br>" + sb.toString() + "</html>",
+				"Успешен запис", JOptionPane.DEFAULT_OPTION);
+		if (result == JOptionPane.OK_OPTION) {
+			this.dispose();
+		}
+	}
+
+	private Boolean ValidateQuantity(PalletModel pm) {
+		if (txtQuantity.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Въведете количество", "Грешка", JOptionPane.INFORMATION_MESSAGE);
+			txtQuantity.requestFocus();
+			return false;
+		} else {
+			if (Integer.parseInt(txtQuantity.getText()) > pm.getQuantityReal()) {
+				JOptionPane.showMessageDialog(null, "Въведенето количество е по-голямо от количеството в склада.",
+						"Грешка", JOptionPane.INFORMATION_MESSAGE);
+				txtQuantity.requestFocus();
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private void SetTextForManualSelected() {
 		pnlPalletPlace.setVisible(true);
 		lblPalletPlace.setText("<html>Ръчно избрано складово място: "
-				+ tblMain.getModel().getValueAt(selectedRow, 0).toString() + "</html>");
-	}
-
-	private void SetTextForAutomaticSelected() {
-		pnlPalletPlace.setVisible(true);
-		lblPalletPlace
-				.setText("<html>Автоматично избрано складово място: " + ExcelFile.GetPalletName(rowToSave) + "</html>");
-
-	}
-
-	private void SaveData() {
-		PalletModel pm = new PalletModel();
-		pm.setRow(rowToSave);
-		pm.setPalletName(ExcelFile.GetPalletName(rowToSave));
-		pm.setBatteryType(txtBatteryType.getText());
-		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
-		pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
-		pm.setProductionDate(LocalDate.parse(txtDate.getText(), Base.dateFormat));
-		pm.setIncomeDate(LocalDate.now());
-		pm.setIncomeTime(LocalTime.now());
-		pm.setStatus(false);
-		pm.setIsReserved(false);
-		pm.setDestination(null);
-
-		selectedRow = -1;
-
-		ExcelFile.SaveData(pm);
-		ShowNotify(pm);
-	}
-
-	private void ShowNotify(PalletModel pm) {
-		int result = JOptionPane
-				.showConfirmDialog(
-						null, "На складово място " + pm.getPalletName() + " е заприходен Тип Батерия: "
-								+ pm.getBatteryType() + ", количество: " + pm.getQuantityReal(),
-						"Успешен запис", JOptionPane.DEFAULT_OPTION);
-		if (result == JOptionPane.OK_OPTION) {
-			dispose();
-		}
-	}
-
-	private void SelectRowToSave() {
-		if (selectedRow != -1) {
-			int column = 0;
-
-			String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
-
-			rowToSave = ExcelFile.GetPlaceRow(value);
-
-		} else {
-			if (!txtBatteryType.getText().isEmpty()) {
-				rowToSave = ExcelFile.GetClosestFreePlace(txtBatteryType.getText());
-				if (rowToSave == -1) {
-					rowToSave = ExcelFile.GetFirstFreeRow();
-				}
-			}
-		}
-	}
-
-	private Boolean ValidateForm() {
-		if (txtBatteryType.getText().isEmpty()) {
-			JOptionPane.showMessageDialog(null, "Въведете Тип Батерия", "Грешка", JOptionPane.INFORMATION_MESSAGE);
-			txtBatteryType.requestFocus();
-			return false;
-		}
-
-		if (txtDate.getText().isEmpty()) {
-			JOptionPane.showMessageDialog(null, "Въведете Дата", "Грешка", JOptionPane.INFORMATION_MESSAGE);
-			txtDate.requestFocus();
-			return false;
-		}
-
-		if (txtQuantityReal.getText().isEmpty()) {
-			JOptionPane.showMessageDialog(null, "Въведете Реално количество", "Грешка",
-					JOptionPane.INFORMATION_MESSAGE);
-			txtQuantityReal.requestFocus();
-			return false;
-		}
-
-		if (txtQuantity.getText().isEmpty()) {
-			JOptionPane.showMessageDialog(null, "Въведете Kоличество по документ", "Грешка",
-					JOptionPane.INFORMATION_MESSAGE);
-			txtQuantity.requestFocus();
-			return false;
-		}
-
-		return true;
+				+ tblMain.getModel().getValueAt(selectedRow, 1).toString() + "</html>");
 	}
 
 	private void SetBackgroundPicture() {
@@ -511,7 +551,21 @@ public class IncomeView extends JDialog {
 		// frmMain.setComponentZOrder(lblBackground, 0);
 	}
 
-	private void FillTable() throws IOException {
+	private void FillTable(HashMap<Integer, PalletModel> data) {
+		PalletModel pm;
+		defaultTableModel.setRowCount(0);
+
+		for (Map.Entry<Integer, PalletModel> entry : data.entrySet()) {
+			pm = entry.getValue();
+
+			defaultTableModel.addRow(new Object[] { false, pm.getPalletName(), pm.getBatteryType(),
+					pm.getQuantityReal(), pm.getQuantity(), BaseMethods.FormatDate(pm.getProductionDate()),
+					BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(), pm.getStatus(),
+					pm.getIsReserved() });
+		}
+	}
+
+	private void FillTable() {
 
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;
@@ -521,10 +575,10 @@ public class IncomeView extends JDialog {
 		for (Map.Entry<Integer, PalletModel> entry : data.entrySet()) {
 			pm = entry.getValue();
 
-			defaultTableModel.addRow(
-					new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(), pm.getQuantity(),
-							BaseMethods.FormatDate(pm.getProductionDate()), BaseMethods.FormatDate(pm.getIncomeDate()),
-							pm.getIncomeTime(), pm.getStatus(), pm.getIsReserved() });
+			defaultTableModel.addRow(new Object[] { false, pm.getPalletName(), pm.getBatteryType(),
+					pm.getQuantityReal(), pm.getQuantity(), BaseMethods.FormatDate(pm.getProductionDate()),
+					BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(), pm.getStatus(),
+					pm.getIsReserved() });
 		}
 	}
 }
