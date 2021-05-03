@@ -10,7 +10,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
@@ -30,6 +29,8 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
 
 import Model.PalletModel;
+import View.LoadingScreen;
+import View.MainView;
 
 public class ExcelFile {
 
@@ -39,6 +40,9 @@ public class ExcelFile {
 	private static Workbook workbook;
 	private static HashMap<Integer, PalletModel> allRows;
 	private static Boolean tableExists = false;
+
+	private static Connection mainConnection;
+	private static Statement mainStatement;
 
 	private static void ReadExcelFile() {
 		File file = new File(Base.mainDbFile);
@@ -305,47 +309,96 @@ public class ExcelFile {
 
 	private static void ReadAllRows() {
 		Sheet sheet = GetSheet();
-		allRows = new HashMap<>();
-		int i = 0;
-		for (Row row : sheet) {
-			ArrayList<String> temp = new ArrayList<String>();
-			temp.add(String.valueOf(i));
 
-			// Reading cells in this way because For loop and Iterator can handle with blank
-			// cells
-			for (int cn = 0; cn <= Base.LAST_ROW; cn++) {
-				Cell cell = row.getCell(cn, MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (cell == null) {
-					temp.add(" ");
-				} else {
-					switch (cell.getCellType()) {
-					case STRING:
-						temp.add(cell.getStringCellValue());
-						break;
-					case NUMERIC:
-						temp.add(String.valueOf(cell.getNumericCellValue()));
-						break;
-					case BOOLEAN:
-						temp.add(String.valueOf(cell.getBooleanCellValue()));
-						break;
-					case BLANK:
-						temp.add(" ");
-						break;
-					case _NONE:
-						temp.add(" ");
-						break;
-					// case FORMULA: ... break;
-					default:
-						temp.add(" ");
+		int rowCount = sheet.getPhysicalNumberOfRows();
+
+		allRows = new HashMap<>();
+
+		mainConnection = getConnection();
+		try {
+			mainStatement = mainConnection.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		LoadingScreen ls = new LoadingScreen();
+
+		new SwingWorker<Void, Integer>() {
+			int i = 0;
+			double percentage = 0;
+			
+			@Override
+			public Void doInBackground() {
+				for (Row row : sheet) {
+					ArrayList<String> temp = new ArrayList<String>();
+					temp.add(String.valueOf(i));
+
+					// Reading cells in this way because For loop and Iterator can handle with blank
+					// cells
+					for (int cn = 0; cn <= Base.LAST_ROW; cn++) {
+						Cell cell = row.getCell(cn, MissingCellPolicy.RETURN_BLANK_AS_NULL);
+						if (cell == null) {
+							temp.add(" ");
+						} else {
+							switch (cell.getCellType()) {
+							case STRING:
+								temp.add(cell.getStringCellValue());
+								break;
+							case NUMERIC:
+								temp.add(String.valueOf(cell.getNumericCellValue()));
+								break;
+							case BOOLEAN:
+								temp.add(String.valueOf(cell.getBooleanCellValue()));
+								break;
+							case BLANK:
+								temp.add(" ");
+								break;
+							case _NONE:
+								temp.add(" ");
+								break;
+							// case FORMULA: ... break;
+							default:
+								temp.add(" ");
+							}
+						}
 					}
+
+					PalletModel pm = new PalletModel(temp);
+					allRows.put(i, pm);
+					FillTable(pm);
+					i++;
+
+					percentage = i * 100 / rowCount;
+					publish((int) percentage);
+					// ls.UpdateProgress(percentage);
 				}
+				return null;
 			}
 
-			PalletModel pm = new PalletModel(temp);
-			allRows.put(i, pm);
-			FillTable(pm);
-			i++;
-		}
+			@Override
+			public void done() {
+				
+				try {
+					mainStatement.close();
+					mainConnection.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				ls.setVisible(false);
+				ls.dispose();
+				
+				MainView.UpdateGui();
+			}
+
+			@Override
+			protected void process(List<Integer> ints) {
+				ls.setProgress(ints.get(0));
+			}
+
+		}.execute();
 	}
 
 	private static Connection getConnection() {
@@ -441,16 +494,6 @@ public class ExcelFile {
 		if (!tableExists) {
 			CreateTable();
 		}
-		Connection connection = null;
-		Statement statement = null;
-
-		connection = getConnection();
-		try {
-			statement = connection.createStatement();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		String query = "INSERT INTO " + TABLE_NAME
 				+ "(Row, PalletName, BatteryType, QuantityReal, Quantity, ProductionDate, IsFree, Date, Time, IsReserved) VALUES "
@@ -458,15 +501,7 @@ public class ExcelFile {
 				+ pm.getQuantityReal() + "," + pm.getQuantity() + ",'" + pm.getProductionDate() + "','" + pm.getStatus()
 				+ "','" + pm.getIncomeDate() + "','" + pm.getIncomeTime() + "','" + pm.getIsReserved() + "')";
 		try {
-			statement.executeUpdate(query);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		try {
-			statement.close();
-			connection.close();
+			mainStatement.executeUpdate(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -488,8 +523,8 @@ public class ExcelFile {
 		while (itr.hasNext()) {
 			PalletModel pm = (PalletModel) itr.next();
 			if (quantityLeft != 0) {
-				String query = "UPDATE " + TABLE_NAME + " SET QuantityReal = " + pm.getQuantityReal()
-						+ ", Quantity = " + pm.getQuantity() + " WHERE PalletName='" + pm.getPalletName() + "'";
+				String query = "UPDATE " + TABLE_NAME + " SET QuantityReal = " + pm.getQuantityReal() + ", Quantity = "
+						+ pm.getQuantity() + " WHERE PalletName='" + pm.getPalletName() + "'";
 
 				try {
 					statement.executeUpdate(query);
@@ -500,7 +535,8 @@ public class ExcelFile {
 			} else {
 				String query = "UPDATE " + TABLE_NAME
 						+ " SET BatteryType = '', QuantityReal = 0, Quantity = 0, ProductionDate = '', IsFree = '"
-						+ pm.getStatus() + "', Date = '', Time = '', IsReserved = '" + pm.getIsReserved() + "' WHERE PalletName='" + pm.getPalletName() + "'";
+						+ pm.getStatus() + "', Date = '', Time = '', IsReserved = '" + pm.getIsReserved()
+						+ "' WHERE PalletName='" + pm.getPalletName() + "'";
 				try {
 					statement.executeUpdate(query);
 				} catch (SQLException e) {

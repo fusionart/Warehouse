@@ -60,7 +60,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 	private JPanel contentPane;
 	private JTextField txtBatteryType;
 	private JTextField txtPallet;
-	private JTextField txtQuantity;
+	private JTextField txtQuantityReal;
 	private JTable tblMain;
 	private JLabel lblBackground;
 
@@ -74,6 +74,8 @@ public class ReservationView extends JDialog implements TableModelListener {
 	private Boolean isFiltered = false;
 	JPanel pnlPalletPlace;
 	JLabel lblPalletPlace;
+	JRadioButton rdbtnIncome;
+	JRadioButton rdbtnOutcome;
 
 	private static int excelFileRow;
 
@@ -116,7 +118,13 @@ public class ReservationView extends JDialog implements TableModelListener {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					SaveData();
+					if (rdbtnOutcome.isSelected()) {
+						SaveDataOutcome();
+					}
+
+					if (rdbtnIncome.isSelected()) {
+						SaveDataIncome();
+					}
 				}
 			}
 		});
@@ -124,9 +132,13 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pnlButtons.add(btnSave);
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// if (ValidateForm()) {
-				SaveData();
-				// }
+				if (rdbtnOutcome.isSelected()) {
+					SaveDataOutcome();
+				}
+
+				if (rdbtnIncome.isSelected()) {
+					SaveDataIncome();
+				}
 			}
 		});
 		btnSave.setFont(Base.DEFAULT_FONT);
@@ -180,12 +192,14 @@ public class ReservationView extends JDialog implements TableModelListener {
 		txtBatteryType.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtBatteryType.getText().trim().isEmpty()) {
-					FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
-					isFiltered = true;
-				} else {
-					if (txtPallet.getText().trim().isEmpty() && isFiltered) {
-						FillTable();
+				if (rdbtnOutcome.isSelected()) {
+					if (!txtBatteryType.getText().trim().isEmpty()) {
+						FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
+						isFiltered = true;
+					} else {
+						if (txtPallet.getText().trim().isEmpty() && isFiltered) {
+							FillTable();
+						}
 					}
 				}
 			}
@@ -222,12 +236,14 @@ public class ReservationView extends JDialog implements TableModelListener {
 		txtPallet.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtPallet.getText().trim().isEmpty()) {
-					FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
-					isFiltered = true;
-				} else {
-					if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
-						FillTable();
+				if (rdbtnOutcome.isSelected()) {
+					if (!txtPallet.getText().trim().isEmpty()) {
+						FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
+						isFiltered = true;
+					} else {
+						if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
+							FillTable();
+						}
 					}
 				}
 			}
@@ -260,25 +276,25 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pnlQuantity.add(lblQuantity, gbc_lblQuantity);
 		lblQuantity.setFont(Base.DEFAULT_FONT);
 
-		txtQuantity = new JTextField();
-		GridBagConstraints gbc_txtQuantity = new GridBagConstraints();
-		gbc_txtQuantity.fill = GridBagConstraints.BOTH;
-		gbc_txtQuantity.gridx = 0;
-		gbc_txtQuantity.gridy = 1;
-		pnlQuantity.add(txtQuantity, gbc_txtQuantity);
-		txtQuantity.setFont(Base.DEFAULT_FONT);
-		txtQuantity.setColumns(10);
-		txtQuantity.addFocusListener(new FocusAdapter() {
+		txtQuantityReal = new JTextField();
+		GridBagConstraints gbc_txtQuantityReal = new GridBagConstraints();
+		gbc_txtQuantityReal.fill = GridBagConstraints.BOTH;
+		gbc_txtQuantityReal.gridx = 0;
+		gbc_txtQuantityReal.gridy = 1;
+		pnlQuantity.add(txtQuantityReal, gbc_txtQuantityReal);
+		txtQuantityReal.setFont(Base.DEFAULT_FONT);
+		txtQuantityReal.setColumns(10);
+		txtQuantityReal.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!txtQuantity.getText().equals("")) {
-					Boolean isNumber = BaseMethods.CheckIsNumber(txtQuantity.getText());
+				if (!txtQuantityReal.getText().equals("")) {
+					Boolean isNumber = BaseMethods.CheckIsNumber(txtQuantityReal.getText());
 					if (!isNumber) {
-						txtQuantity.setText("");
-						txtQuantity.requestFocus();
-					} else if (BaseMethods.CheckIfNegative(txtQuantity.getText())) {
-						txtQuantity.setText("");
-						txtQuantity.requestFocus();
+						txtQuantityReal.setText("");
+						txtQuantityReal.requestFocus();
+					} else if (BaseMethods.CheckIfNegative(txtQuantityReal.getText())) {
+						txtQuantityReal.setText("");
+						txtQuantityReal.requestFocus();
 					}
 				}
 			}
@@ -286,14 +302,14 @@ public class ReservationView extends JDialog implements TableModelListener {
 
 		ButtonGroup rdbtnGroup = new ButtonGroup();
 
-		JRadioButton rdbtnIncome = new JRadioButton("Приход");
+		rdbtnIncome = new JRadioButton("Приход");
 		rdbtnIncome.setBounds(20, 303, 109, 23);
 		rdbtnIncome.setActionCommand("Income");
 		rdbtnIncome.setFont(Base.DEFAULT_FONT);
 		rdbtnGroup.add(rdbtnIncome);
 		pnlInput.add(rdbtnIncome);
 
-		JRadioButton rdbtnOutcome = new JRadioButton("Разход");
+		rdbtnOutcome = new JRadioButton("Разход");
 		rdbtnOutcome.setBounds(141, 303, 109, 23);
 		rdbtnOutcome.setActionCommand("Outcome");
 		rdbtnOutcome.setFont(Base.DEFAULT_FONT);
@@ -332,9 +348,10 @@ public class ReservationView extends JDialog implements TableModelListener {
 		tblMain = new JTable() {
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				Boolean isFree = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 8).toString());
+				//Boolean isFree = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 8).toString());
+				Boolean isReserved = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 9).toString());
 
-				if (isFree) {
+				if (isReserved && rdbtnOutcome.isSelected()) {
 					return column == 0;
 				} else {
 					return false;
@@ -365,8 +382,6 @@ public class ReservationView extends JDialog implements TableModelListener {
 					int reservedColumn = 9;
 					int statusColumn = 8;
 
-					Boolean isReserved = Boolean
-							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, reservedColumn).toString());
 					Boolean isFree = Boolean
 							.parseBoolean(tblMain.getModel().getValueAt(selectedRow, statusColumn).toString());
 
@@ -376,10 +391,19 @@ public class ReservationView extends JDialog implements TableModelListener {
 				}
 
 				if (selectedRow != -1) {
-					SetTextForManualSelected();
+					if (rdbtnIncome.isSelected()) {
+						int column = 1;
+
+						String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
+
+						rowToSave = ExcelFile.GetPlaceRow(value);
+						
+						SetTextForManualSelected();
+					}
 				} else {
 					lblPalletPlace.setText("");
 					pnlPalletPlace.setVisible(false);
+					txtPallet.setText("");
 				}
 			}
 		});
@@ -425,9 +449,8 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pm.setPalletName(tblMain.getModel().getValueAt(row, 1).toString());
 		pm.setBatteryType(tblMain.getModel().getValueAt(row, 2).toString());
 		pm.setQuantityReal(Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString()));
-		pm.setQuantity(Integer.parseInt(tblMain.getModel().getValueAt(row, 4).toString()));
-		// pm.setProductionDate(LocalDate.parse(tblMain.getModel().getValueAt(row,
-		// 5).toString(), Base.dateFormat));
+		pm.setQuantity(0);
+		pm.setProductionDate(LocalDate.now());
 		pm.setIncomeDate(LocalDate.now());
 		pm.setIncomeTime(LocalTime.now());
 		pm.setStatus(true);
@@ -459,15 +482,15 @@ public class ReservationView extends JDialog implements TableModelListener {
 	}
 
 	private void QuantityTextboxEdit() {
-		txtQuantity.setText(String.valueOf(selectedQuantity));
+		txtQuantityReal.setText(String.valueOf(selectedQuantity));
 		if (rowsChecked > 1) {
-			txtQuantity.setEditable(false);
+			txtQuantityReal.setEditable(false);
 		} else {
-			txtQuantity.setEditable(true);
+			txtQuantityReal.setEditable(true);
 		}
 	}
 
-	private void SaveData() {
+	private void SaveDataOutcome() {
 
 		Boolean readyToSave = true;
 		int quantityLeft = 0;
@@ -475,10 +498,10 @@ public class ReservationView extends JDialog implements TableModelListener {
 		if (rowsChecked == 1) {
 			PalletModel pm = pmList.get(0);
 			readyToSave = ValidateQuantity(pm);
-			if (readyToSave && (pm.getQuantityReal() - Integer.parseInt(txtQuantity.getText()) != 0)) {
-				quantityLeft = pm.getQuantityReal() - Integer.parseInt(txtQuantity.getText());
-				pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
-				pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
+			if (readyToSave && (pm.getQuantityReal() - Integer.parseInt(txtQuantityReal.getText()) != 0)) {
+				quantityLeft = pm.getQuantityReal() - Integer.parseInt(txtQuantityReal.getText());
+				pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
+				pm.setQuantity(Integer.parseInt(txtQuantityReal.getText()));
 				pm.setStatus(false);
 
 				pmList.remove(0);
@@ -497,6 +520,26 @@ public class ReservationView extends JDialog implements TableModelListener {
 		// pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
 		// pm.setQuantity(Integer.parseInt(txtPallet.getText()));
 
+	}
+
+	private void SaveDataIncome() {
+		PalletModel pm = new PalletModel();
+		pm.setRow(rowToSave);
+		pm.setPalletName(tblMain.getModel().getValueAt(selectedRow, 1).toString());
+		pm.setBatteryType(txtBatteryType.getText());
+		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
+		pm.setQuantity(0);
+		pm.setProductionDate(LocalDate.now());
+		pm.setIncomeDate(LocalDate.now());
+		pm.setIncomeTime(LocalTime.now());
+		pm.setStatus(true);
+		pm.setIsReserved(true);
+		pm.setDestination(null);
+
+		selectedRow = -1;
+
+		ExcelFile.SaveData(pm);
+		// ShowNotify(pm);
 	}
 
 	private void ShowNotify(List<PalletModel> pm) {
@@ -521,15 +564,15 @@ public class ReservationView extends JDialog implements TableModelListener {
 	}
 
 	private Boolean ValidateQuantity(PalletModel pm) {
-		if (txtQuantity.getText().isEmpty()) {
+		if (txtQuantityReal.getText().isEmpty()) {
 			JOptionPane.showMessageDialog(null, "Въведете количество", "Грешка", JOptionPane.INFORMATION_MESSAGE);
-			txtQuantity.requestFocus();
+			txtQuantityReal.requestFocus();
 			return false;
 		} else {
-			if (Integer.parseInt(txtQuantity.getText()) > pm.getQuantityReal()) {
+			if (Integer.parseInt(txtQuantityReal.getText()) > pm.getQuantityReal()) {
 				JOptionPane.showMessageDialog(null, "Въведенето количество е по-голямо от количеството в склада.",
 						"Грешка", JOptionPane.INFORMATION_MESSAGE);
-				txtQuantity.requestFocus();
+				txtQuantityReal.requestFocus();
 				return false;
 			}
 		}
@@ -540,6 +583,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pnlPalletPlace.setVisible(true);
 		lblPalletPlace.setText("<html>Ръчно избрано складово място: "
 				+ tblMain.getModel().getValueAt(selectedRow, 1).toString() + "</html>");
+		txtPallet.setText(tblMain.getModel().getValueAt(selectedRow, 1).toString());
 	}
 
 	private void SetBackgroundPicture() {

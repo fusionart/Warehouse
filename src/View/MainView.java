@@ -2,6 +2,7 @@ package View;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Graphics;
 
 import javax.swing.JFrame;
@@ -17,6 +18,8 @@ import Model.PalletModel;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
@@ -82,7 +85,7 @@ public class MainView extends JFrame {
 		
 		addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+			public void windowClosing(WindowEvent windowEvent) {
 				ExcelFile.DropTable();
 			}
 		});
@@ -189,7 +192,6 @@ public class MainView extends JFrame {
 		scrollPane.setViewportView(tblMain);
 		tblMain.setModel(defaultTableModel);
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		FillTable();
 		BaseMethods.ResizeColumnWidth(tblMain);
 
 		JPanel pnlButtons = new JPanel();
@@ -215,7 +217,6 @@ public class MainView extends JFrame {
 	                    public void windowClosed(WindowEvent e) {
 							super.windowClosed(e);
 	                        FillTable();
-	                        pack();
 	                    }
 	                });
 				} catch (IOException e1) {
@@ -240,7 +241,6 @@ public class MainView extends JFrame {
 	                    public void windowClosed(WindowEvent e) {
 							super.windowClosed(e);
 	                        FillTable();
-	                        pack();
 	                    }
 	                });
 				} catch (IOException e1) {
@@ -265,7 +265,6 @@ public class MainView extends JFrame {
 	                    public void windowClosed(WindowEvent e) {
 							super.windowClosed(e);
 	                        FillTable();
-	                        pack();
 	                    }
 	                });
 				} catch (IOException e1) {
@@ -285,6 +284,7 @@ public class MainView extends JFrame {
 
 		SetBackgroundPicture();
 		setVisible(true);
+		FillTable();
 	}
 
 	private void SetBackgroundPicture() {
@@ -311,7 +311,12 @@ public class MainView extends JFrame {
 			break;
 		}
 	}
-	private void FillTable() {
+	
+	public static void UpdateGui() {
+		FillTable();
+	}
+	
+	private static void FillTable() {
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;
 

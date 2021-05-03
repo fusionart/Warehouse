@@ -19,6 +19,8 @@ import javax.swing.JOptionPane;
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 
+import View.LoadingScreen;
+
 public class Base {
 	public final static String DOT = ".";
 	public final static String BACKSLASH = "\\";
@@ -109,6 +111,7 @@ public class Base {
 	public static Boolean isEmailSent = true;
 
 	public static Integer refreshTime;
+
 
 	public static void LoadBasics() throws BackingStoreException {
 		LoadPaths();
