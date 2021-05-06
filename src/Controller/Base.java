@@ -43,6 +43,7 @@ public class Base {
 	public final static String CREATE_DOWNTIME_LABEL = "Въвеждане на формуляр";
 	public final static String ACTION_LABEL = "Въвеждане действие \nкъм формуляр";
 	public final static String MAINTENANCE_LABEL = "Поддръжка: статистика";
+	public static String fullFrameCaption;
 
 	// buttons
 	public final static String MAINTENANCE = "maintenance";
@@ -92,6 +93,7 @@ public class Base {
 	public static String reportAddressC;
 	
 	//Warehouses names
+	private static String mainWarehouseName;
 	public static String warehouseAName;
 	public static String warehouseBName;
 	public static String warehouseCName;
@@ -117,6 +119,7 @@ public class Base {
 		LoadPaths();
 		AssignVariables();
 		AssignMainDbFile(userWarehouseAccess);
+		fullFrameCaption = FRAME_CAPTION + " / " + mainWarehouseName;
 	}
 
 	private static void LoadPaths() {
@@ -133,14 +136,17 @@ public class Base {
 		case "A":
 			mainDbFile = dbFileA;
 			mainReportAddress = reportAddressA;
+			mainWarehouseName = warehouseAName;
 			break;
 		case "B":
 			mainDbFile = dbFileB;
 			mainReportAddress = reportAddressB;
+			mainWarehouseName = warehouseBName;
 			break;
 		case "C":
 			mainDbFile = dbFileC;
 			mainReportAddress = reportAddressC;
+			mainWarehouseName = warehouseCName;
 			break;
 		default:
 			int result = JOptionPane.showConfirmDialog(null, "Не може да бъде зареден файл dbFile" + userWarehouseAccess,

@@ -43,6 +43,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -70,7 +72,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private int selectedQuantity;
 	private int rowsChecked;
 	private Boolean isFiltered = false;
-	
+
 	private static int excelFileRow;
 
 	private static DefaultTableModel defaultTableModel;
@@ -89,7 +91,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
 		setIconImage(frameIcon);
-		setTitle(Base.FRAME_CAPTION);
+		setTitle(Base.fullFrameCaption);
 		setResizable(false);
 		setModal(true);
 
@@ -113,6 +115,14 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					SaveData();
+					SummaryView summaryView = new SummaryView(CreateSummaryString());
+					summaryView.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosed(WindowEvent e) {
+							super.windowClosed(e);
+							dispose();
+						}
+					});
 				}
 			}
 		});
@@ -122,6 +132,15 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			public void actionPerformed(ActionEvent e) {
 				// if (ValidateForm()) {
 				SaveData();
+
+				SummaryView summaryView = new SummaryView(CreateSummaryString());
+				summaryView.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosed(WindowEvent e) {
+						super.windowClosed(e);
+						dispose();
+					}
+				});
 				// }
 			}
 		});
@@ -428,7 +447,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			ExcelFile.SaveDataAtOutcome(pmList, quantityLeft);
 			ExcelFile.UpdateTable(pmList, quantityLeft);
 			ExcelFile.FillOutcomeReport(pmList);
-			ShowNotify(pmList);
+			// ShowNotify(pmList);
 		}
 
 		// Set the quantity for the Outcome report Excel file
@@ -437,8 +456,10 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	}
 
-	private void ShowNotify(List<PalletModel> pm) {
+	private String CreateSummaryString() {
 		StringBuilder sb = new StringBuilder();
+		sb.append("<html>Изписано количество: <br>");
+		
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {
 			PalletModel pmTemp = (PalletModel) itr.next();
@@ -450,12 +471,15 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			sb.append(pmTemp.getQuantityReal());
 			sb.append("<br>");
 		}
+		
+		sb.append("</html>");
+		return sb.toString();
 
-		int result = JOptionPane.showConfirmDialog(null, "<html>Изписано количество: <br>" + sb.toString() + "</html>",
-				"Успешен запис", JOptionPane.DEFAULT_OPTION);
-		if (result == JOptionPane.OK_OPTION) {
-			this.dispose();
-		}
+//		int result = JOptionPane.showConfirmDialog(null, "<html>Изписано количество: <br>" + sb.toString() + "</html>",
+//				"Успешен запис", JOptionPane.DEFAULT_OPTION);
+//		if (result == JOptionPane.OK_OPTION) {
+//			this.dispose();
+//		}
 	}
 
 	private Boolean ValidateQuantity(PalletModel pm) {

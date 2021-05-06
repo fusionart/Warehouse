@@ -44,6 +44,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -95,7 +97,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
 		setIconImage(frameIcon);
-		setTitle(Base.FRAME_CAPTION);
+		setTitle(Base.fullFrameCaption);
 		setResizable(false);
 		setModal(true);
 
@@ -134,10 +136,29 @@ public class ReservationView extends JDialog implements TableModelListener {
 			public void actionPerformed(ActionEvent e) {
 				if (rdbtnOutcome.isSelected()) {
 					SaveDataOutcome();
+
+					SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
+					summaryView.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosed(WindowEvent e) {
+							super.windowClosed(e);
+							dispose();
+						}
+					});
 				}
 
 				if (rdbtnIncome.isSelected()) {
-					SaveDataIncome();
+
+					PalletModel pm = SaveDataIncome();
+
+					SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
+					summaryView.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosed(WindowEvent e) {
+							super.windowClosed(e);
+							dispose();
+						}
+					});
 				}
 			}
 		});
@@ -348,7 +369,8 @@ public class ReservationView extends JDialog implements TableModelListener {
 		tblMain = new JTable() {
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				//Boolean isFree = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 8).toString());
+				// Boolean isFree = Boolean.parseBoolean(tblMain.getModel().getValueAt(row,
+				// 8).toString());
 				Boolean isReserved = Boolean.parseBoolean(tblMain.getModel().getValueAt(row, 9).toString());
 
 				if (isReserved && rdbtnOutcome.isSelected()) {
@@ -397,7 +419,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 						String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
 
 						rowToSave = ExcelFile.GetPlaceRow(value);
-						
+
 						SetTextForManualSelected();
 					}
 				} else {
@@ -513,7 +535,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 			ExcelFile.SaveDataAtOutcome(pmList, quantityLeft);
 			ExcelFile.UpdateTable(pmList, quantityLeft);
 			ExcelFile.FillOutcomeReport(pmList);
-			ShowNotify(pmList);
+			// ShowNotify(pmList);
 		}
 
 		// Set the quantity for the Outcome report Excel file
@@ -522,7 +544,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 
 	}
 
-	private void SaveDataIncome() {
+	private PalletModel SaveDataIncome() {
 		PalletModel pm = new PalletModel();
 		pm.setRow(rowToSave);
 		pm.setPalletName(tblMain.getModel().getValueAt(selectedRow, 1).toString());
@@ -539,28 +561,43 @@ public class ReservationView extends JDialog implements TableModelListener {
 		selectedRow = -1;
 
 		ExcelFile.SaveData(pm);
+
+		return pm;
 		// ShowNotify(pm);
 	}
 
-	private void ShowNotify(List<PalletModel> pm) {
+	private String CreateSummaryStringIncome(PalletModel pm) {
 		StringBuilder sb = new StringBuilder();
+		sb.append("<html>Заприходено количество: <br>");
+		sb.append("Складово място ");
+		sb.append(pm.getPalletName());
+		sb.append(", Описание: ");
+		sb.append(pm.getBatteryType());
+		sb.append(", Количество: ");
+		sb.append(pm.getQuantityReal());
+		sb.append("</html>");
+
+		return sb.toString();
+	}
+
+	private String CreateSummaryStringOutcome() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html>Изписано количество: <br>");
+
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {
 			PalletModel pmTemp = (PalletModel) itr.next();
 			sb.append("Складово място: ");
 			sb.append(pmTemp.getPalletName());
-			sb.append(", Тип Батерия: ");
+			sb.append(", Описание: ");
 			sb.append(pmTemp.getBatteryType());
 			sb.append(", Количество: ");
 			sb.append(pmTemp.getQuantityReal());
 			sb.append("<br>");
 		}
 
-		int result = JOptionPane.showConfirmDialog(null, "<html>Изписано количество: <br>" + sb.toString() + "</html>",
-				"Успешен запис", JOptionPane.DEFAULT_OPTION);
-		if (result == JOptionPane.OK_OPTION) {
-			this.dispose();
-		}
+		sb.append("</html>");
+		return sb.toString();
 	}
 
 	private Boolean ValidateQuantity(PalletModel pm) {

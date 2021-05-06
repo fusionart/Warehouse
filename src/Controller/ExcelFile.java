@@ -308,10 +308,8 @@ public class ExcelFile {
 	}
 
 	private static void ReadAllRows() {
-		Sheet sheet = GetSheet();
 
-		int rowCount = sheet.getPhysicalNumberOfRows();
-
+		MainView.SetVisibleButtons(false);
 		allRows = new HashMap<>();
 
 		mainConnection = getConnection();
@@ -330,6 +328,10 @@ public class ExcelFile {
 			
 			@Override
 			public Void doInBackground() {
+				Sheet sheet = GetSheet();
+
+				int rowCount = sheet.getPhysicalNumberOfRows();
+				
 				for (Row row : sheet) {
 					ArrayList<String> temp = new ArrayList<String>();
 					temp.add(String.valueOf(i));
@@ -391,6 +393,7 @@ public class ExcelFile {
 				ls.dispose();
 				
 				MainView.UpdateGui();
+				MainView.SetVisibleButtons(true);
 			}
 
 			@Override

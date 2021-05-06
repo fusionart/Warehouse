@@ -58,6 +58,7 @@ public class MainView extends JFrame {
 	private JTable tblMain;
 	private static JLabel lblBackground;
 	private ButtonGroup rdbtnGroup;
+	private static JPanel pnlButtons;
 
 	private static DefaultTableModel defaultTableModel;
 	private static String header[] = { "Складово място", "Тип батерия", "Количество", "Количество по документ",
@@ -72,7 +73,7 @@ public class MainView extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
 		setIconImage(frameIcon);
-		setTitle(Base.FRAME_CAPTION);
+		setTitle(Base.fullFrameCaption);
 		setResizable(false);
 		
 		contentPane = new JPanel();
@@ -194,7 +195,7 @@ public class MainView extends JFrame {
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		BaseMethods.ResizeColumnWidth(tblMain);
 
-		JPanel pnlButtons = new JPanel();
+		pnlButtons = new JPanel();
 		pnlButtons.setBounds(886, 728, 470, 30);
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
@@ -279,12 +280,14 @@ public class MainView extends JFrame {
 			pnlRadioButtons.setVisible(true);
 			scrollPane.setBounds(10, 80, 1346, 626);
 			LoadSelectedtWarehouseData();
-			FillTable();
+			//FillTable();
 		}
 
 		SetBackgroundPicture();
 		setVisible(true);
+		SetVisibleButtons(false);
 		FillTable();
+		//SetVisibleButtons(true);
 	}
 
 	private void SetBackgroundPicture() {
@@ -314,6 +317,14 @@ public class MainView extends JFrame {
 	
 	public static void UpdateGui() {
 		FillTable();
+	}
+	
+	public static void SetVisibleButtons(Boolean isVisible) {
+		pnlButtons.setVisible(isVisible);
+		
+		if (Base.showAllWarehouses) {
+			pnlButtons.setVisible(false);
+		}
 	}
 	
 	private static void FillTable() {

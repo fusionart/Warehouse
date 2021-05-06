@@ -39,6 +39,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -74,7 +76,7 @@ public class IncomeView extends JDialog {
 	public IncomeView() throws IOException {
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
 		setIconImage(frameIcon);
-		setTitle(Base.FRAME_CAPTION);
+		setTitle(Base.fullFrameCaption);
 		setResizable(false);
 		setModal(true);
 
@@ -93,25 +95,35 @@ public class IncomeView extends JDialog {
 		pnlButtons.setLayout(null);
 
 		JButton btnSave = new JButton("Запази");
-		btnSave.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					if (ValidateForm()) {
-						SaveData();
-					}
+//		btnSave.addKeyListener(new KeyAdapter() {
+//			@Override
+//			public void keyPressed(KeyEvent e) {
+//				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//					if (ValidateForm()) {
+//						SaveData();
+//					}
+//				}
+//			}
+//		});
+		
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (ValidateForm()) {
+					PalletModel pm = SaveData();
+
+					SummaryView summaryView = new SummaryView(CreateSummaryString(pm));
+					summaryView.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosed(WindowEvent e) {
+							super.windowClosed(e);
+							dispose();
+						}
+					});
 				}
 			}
 		});
 		btnSave.setBounds(0, 0, 150, 30);
 		pnlButtons.add(btnSave);
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (ValidateForm()) {
-					SaveData();
-				}
-			}
-		});
 		btnSave.setFont(Base.DEFAULT_FONT);
 
 		JButton btnCancel = new JButton("Отказ");
@@ -423,7 +435,7 @@ public class IncomeView extends JDialog {
 
 	}
 
-	private void SaveData() {
+	private PalletModel SaveData() {
 		PalletModel pm = new PalletModel();
 		pm.setRow(rowToSave);
 		pm.setPalletName(ExcelFile.GetPalletName(rowToSave));
@@ -440,18 +452,31 @@ public class IncomeView extends JDialog {
 		selectedRow = -1;
 
 		ExcelFile.SaveData(pm);
-		ShowNotify(pm);
+		return pm;
+		//ShowNotify(pm);
 	}
 
-	private void ShowNotify(PalletModel pm) {
-		int result = JOptionPane
-				.showConfirmDialog(
-						null, "На складово място " + pm.getPalletName() + " е заприходен Тип Батерия: "
-								+ pm.getBatteryType() + ", количество: " + pm.getQuantityReal(),
-						"Успешен запис", JOptionPane.DEFAULT_OPTION);
-		if (result == JOptionPane.OK_OPTION) {
-			dispose();
-		}
+	private String CreateSummaryString(PalletModel pm) {
+//		int result = JOptionPane
+//				.showConfirmDialog(
+//						null, "На складово място " + pm.getPalletName() + " е заприходен Тип Батерия: "
+//								+ pm.getBatteryType() + ", количество: " + pm.getQuantityReal(),
+//						"Успешен запис", JOptionPane.DEFAULT_OPTION);
+//		if (result == JOptionPane.OK_OPTION) {
+//			dispose();
+//		}
+		//"<html>Изписано количество: <br>" + sb.toString() + "</html>"
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html>Заприходено количество: <br>");
+		sb.append("Складово място ");
+		sb.append(pm.getPalletName());
+		sb.append(", Тип Батерия: ");
+		sb.append(pm.getBatteryType());
+		sb.append(", Количество: ");
+		sb.append(pm.getQuantityReal());
+		sb.append("</html>");
+
+		return sb.toString();
 	}
 
 	private void SelectRowToSave() {
