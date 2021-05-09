@@ -114,6 +114,30 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					if (!pmList.isEmpty()) {
+						SaveData();
+						SummaryView summaryView = new SummaryView(CreateSummaryString());
+						summaryView.addWindowListener(new WindowAdapter() {
+							@Override
+							public void windowClosed(WindowEvent e) {
+								super.windowClosed(e);
+								dispose();
+							}
+						});
+					} else {
+						JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+								JOptionPane.INFORMATION_MESSAGE);
+					}
+
+				}
+			}
+		});
+		btnSave.setBounds(0, 0, 150, 30);
+		pnlButtons.add(btnSave);
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// if (ValidateForm()) {
+				if (!pmList.isEmpty()) {
 					SaveData();
 					SummaryView summaryView = new SummaryView(CreateSummaryString());
 					summaryView.addWindowListener(new WindowAdapter() {
@@ -123,24 +147,10 @@ public class OutcomeView extends JDialog implements TableModelListener {
 							dispose();
 						}
 					});
+				} else {
+					JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+							JOptionPane.INFORMATION_MESSAGE);
 				}
-			}
-		});
-		btnSave.setBounds(0, 0, 150, 30);
-		pnlButtons.add(btnSave);
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// if (ValidateForm()) {
-				SaveData();
-
-				SummaryView summaryView = new SummaryView(CreateSummaryString());
-				summaryView.addWindowListener(new WindowAdapter() {
-					@Override
-					public void windowClosed(WindowEvent e) {
-						super.windowClosed(e);
-						dispose();
-					}
-				});
 				// }
 			}
 		});
@@ -459,7 +469,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private String CreateSummaryString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html>Изписано количество: <br>");
-		
+
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {
 			PalletModel pmTemp = (PalletModel) itr.next();
@@ -471,7 +481,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			sb.append(pmTemp.getQuantityReal());
 			sb.append("<br>");
 		}
-		
+
 		sb.append("</html>");
 		return sb.toString();
 

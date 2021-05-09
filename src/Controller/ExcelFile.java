@@ -311,6 +311,7 @@ public class ExcelFile {
 
 		MainView.SetVisibleButtons(false);
 		allRows = new HashMap<>();
+		DeleteDataFromTable();
 
 		mainConnection = getConnection();
 		try {
@@ -325,13 +326,13 @@ public class ExcelFile {
 		new SwingWorker<Void, Integer>() {
 			int i = 0;
 			double percentage = 0;
-			
+
 			@Override
 			public Void doInBackground() {
 				Sheet sheet = GetSheet();
 
 				int rowCount = sheet.getPhysicalNumberOfRows();
-				
+
 				for (Row row : sheet) {
 					ArrayList<String> temp = new ArrayList<String>();
 					temp.add(String.valueOf(i));
@@ -380,7 +381,7 @@ public class ExcelFile {
 
 			@Override
 			public void done() {
-				
+
 				try {
 					mainStatement.close();
 					mainConnection.close();
@@ -388,10 +389,10 @@ public class ExcelFile {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				ls.setVisible(false);
 				ls.dispose();
-				
+
 				MainView.UpdateGui();
 				MainView.SetVisibleButtons(true);
 			}
@@ -490,6 +491,37 @@ public class ExcelFile {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	private static void DeleteDataFromTable() {
+		if (tableExists) {
+			Connection connection = null;
+			Statement statement = null;
+
+			connection = getConnection();
+			try {
+				statement = connection.createStatement();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			String query = "DELETE FROM " + TABLE_NAME;
+			try {
+				statement.execute(query);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			try {
+				statement.close();
+				connection.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -690,15 +722,6 @@ public class ExcelFile {
 		return cell;
 	}
 
-	public static String GetPalletName(int row) {
-		CheckIfFileIsEdited();
-		PalletModel pm;
-
-		pm = allRows.get(row);
-
-		return pm.getPalletName();
-	}
-
 	public static HashMap<Integer, PalletModel> GetAllRows() {
 		CheckIfFileIsEdited();
 		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
@@ -706,39 +729,42 @@ public class ExcelFile {
 		return data;
 	}
 
-	public static HashMap<Integer, PalletModel> GetAllFreePlaces() {
-		CheckIfFileIsEdited();
-		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
-		data.putAll(allRows);
-		PalletModel pm;
-
-		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<Integer, PalletModel> entry = it.next();
-			pm = entry.getValue();
-
-			if (!pm.getStatus()) {
-				it.remove();
-			}
-		}
-
-		return data;
-	}
-
 	public static int GetFirstFreeRow() {
 		int foundOnRow = NOT_FOUND;
 		CheckIfFileIsEdited();
-		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
-		data.putAll(allRows);
-		PalletModel pm;
 
-		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<Integer, PalletModel> entry = it.next();
-			pm = entry.getValue();
+		Connection connection = null;
+		Statement statement = null;
 
-			if (pm.getStatus() && !pm.getIsReserved()) {
-				foundOnRow = pm.getRow();
-				break;
+		connection = getConnection();
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		String query = "SELECT * FROM " + TABLE_NAME
+				+ " WHERE IsFree = true AND IsReserved = false FETCH FIRST ROW ONLY";
+		ResultSet rs;
+		try {
+			rs = statement.executeQuery(query);
+
+			if (rs.next()) {
+				foundOnRow = Integer.parseInt(rs.getString("Row"));
 			}
+
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		try {
+			statement.close();
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return foundOnRow;
@@ -762,45 +788,42 @@ public class ExcelFile {
 		return data;
 	}
 
-	public static int GetPlaceRow(String pattern) {
-		int foundOnRow = 0;
-		CheckIfFileIsEdited();
-		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
-		data.putAll(allRows);
-		PalletModel pm;
-
-		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<Integer, PalletModel> entry = it.next();
-			pm = entry.getValue();
-
-			if (pm.getPalletName().equals(pattern)) {
-				foundOnRow = pm.getRow();
-				break;
-			}
-		}
-
-		// System.out.println(foundOnRow);
-		return foundOnRow;
-	}
-
-	public static int GetBatteryTypeRow(String pattern) {
+	private static int GetBatteryTypeRow(String pattern) {
 		int foundOnRow = NOT_FOUND;
-		CheckIfFileIsEdited();
-		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
-		data.putAll(allRows);
-		PalletModel pm;
 
-		for (Iterator<Map.Entry<Integer, PalletModel>> it = data.entrySet().iterator(); it.hasNext();) {
-			Map.Entry<Integer, PalletModel> entry = it.next();
-			pm = entry.getValue();
+		Connection connection = null;
+		Statement statement = null;
 
-			if (pm.getBatteryType().equals(pattern)) {
-				foundOnRow = pm.getRow();
-				break;
-			}
+		connection = getConnection();
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		// System.out.println(foundOnRow);
+		String query = "SELECT * FROM " + TABLE_NAME + " WHERE BatteryType='" + pattern + "' " + "FETCH FIRST ROW ONLY";
+		ResultSet rs;
+		try {
+			rs = statement.executeQuery(query);
+
+			if (rs.next()) {
+				foundOnRow = Integer.parseInt(rs.getString("Row"));
+			}
+
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		try {
+			statement.close();
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return foundOnRow;
 	}
 

@@ -116,53 +116,87 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pnlButtons.setLayout(null);
 
 		JButton btnSave = new JButton("Запази");
+		btnSave.setBounds(0, 0, 150, 30);
+		pnlButtons.add(btnSave);
+		btnSave.setFont(Base.DEFAULT_FONT);
 		btnSave.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					if (rdbtnOutcome.isSelected()) {
-						SaveDataOutcome();
+						if (!pmList.isEmpty()) {
+							SaveDataOutcome();
+
+							SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
+							summaryView.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosed(WindowEvent e) {
+									super.windowClosed(e);
+									dispose();
+								}
+							});
+						} else {
+							JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+									JOptionPane.INFORMATION_MESSAGE);
+						}
 					}
 
 					if (rdbtnIncome.isSelected()) {
-						SaveDataIncome();
+
+						PalletModel pm = SaveDataIncome();
+
+						if (pm != null) {
+							SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
+							summaryView.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosed(WindowEvent e) {
+									super.windowClosed(e);
+									dispose();
+								}
+							});
+						}
 					}
 				}
 			}
 		});
-		btnSave.setBounds(0, 0, 150, 30);
-		pnlButtons.add(btnSave);
+
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (rdbtnOutcome.isSelected()) {
-					SaveDataOutcome();
+					if (!pmList.isEmpty()) {
+						SaveDataOutcome();
 
-					SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
-					summaryView.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosed(WindowEvent e) {
-							super.windowClosed(e);
-							dispose();
-						}
-					});
+						SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
+						summaryView.addWindowListener(new WindowAdapter() {
+							@Override
+							public void windowClosed(WindowEvent e) {
+								super.windowClosed(e);
+								dispose();
+							}
+						});
+					} else {
+						JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+								JOptionPane.INFORMATION_MESSAGE);
+					}
 				}
 
 				if (rdbtnIncome.isSelected()) {
 
 					PalletModel pm = SaveDataIncome();
 
-					SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
-					summaryView.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosed(WindowEvent e) {
-							super.windowClosed(e);
-							dispose();
-						}
-					});
+					if (pm != null) {
+						SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
+						summaryView.addWindowListener(new WindowAdapter() {
+							@Override
+							public void windowClosed(WindowEvent e) {
+								super.windowClosed(e);
+								dispose();
+							}
+						});
+					}
 				}
 			}
 		});
-		btnSave.setFont(Base.DEFAULT_FONT);
 
 		JButton btnCancel = new JButton("Отказ");
 		btnCancel.setBounds(160, 0, 150, 30);
@@ -416,9 +450,9 @@ public class ReservationView extends JDialog implements TableModelListener {
 					if (rdbtnIncome.isSelected()) {
 						int column = 1;
 
-						String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
+						String palletName = tblMain.getModel().getValueAt(selectedRow, column).toString();
 
-						rowToSave = ExcelFile.GetPlaceRow(value);
+						rowToSave = ExcelFile.FindPalletRow(palletName);
 
 						SetTextForManualSelected();
 					}
@@ -513,7 +547,6 @@ public class ReservationView extends JDialog implements TableModelListener {
 	}
 
 	private void SaveDataOutcome() {
-
 		Boolean readyToSave = true;
 		int quantityLeft = 0;
 		// Save the left quantity in the working Excel warehouse db file
@@ -537,32 +570,34 @@ public class ReservationView extends JDialog implements TableModelListener {
 			ExcelFile.FillOutcomeReport(pmList);
 			// ShowNotify(pmList);
 		}
-
-		// Set the quantity for the Outcome report Excel file
-		// pm.setQuantityReal(Integer.parseInt(txtQuantity.getText()));
-		// pm.setQuantity(Integer.parseInt(txtPallet.getText()));
-
 	}
 
 	private PalletModel SaveDataIncome() {
-		PalletModel pm = new PalletModel();
-		pm.setRow(rowToSave);
-		pm.setPalletName(tblMain.getModel().getValueAt(selectedRow, 1).toString());
-		pm.setBatteryType(txtBatteryType.getText());
-		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
-		pm.setQuantity(0);
-		pm.setProductionDate(LocalDate.now());
-		pm.setIncomeDate(LocalDate.now());
-		pm.setIncomeTime(LocalTime.now());
-		pm.setStatus(true);
-		pm.setIsReserved(true);
-		pm.setDestination(null);
+		if (selectedRow != -1) {
+			PalletModel pm = new PalletModel();
+			pm.setRow(rowToSave);
+			pm.setPalletName(tblMain.getModel().getValueAt(selectedRow, 1).toString());
+			pm.setBatteryType(txtBatteryType.getText());
+			pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
+			pm.setQuantity(0);
+			pm.setProductionDate(LocalDate.now());
+			pm.setIncomeDate(LocalDate.now());
+			pm.setIncomeTime(LocalTime.now());
+			pm.setStatus(true);
+			pm.setIsReserved(true);
+			pm.setDestination(null);
 
-		selectedRow = -1;
+			selectedRow = -1;
 
-		ExcelFile.SaveData(pm);
+			ExcelFile.SaveData(pm);
 
-		return pm;
+			return pm;
+		} else {
+			JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+					JOptionPane.INFORMATION_MESSAGE);
+			return null;
+		}
+
 		// ShowNotify(pm);
 	}
 

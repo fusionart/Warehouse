@@ -327,6 +327,7 @@ public class MainView extends JFrame {
 		}
 	}
 	
+
 	private static void FillTable() {
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();
 		PalletModel pm;

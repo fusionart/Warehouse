@@ -430,15 +430,15 @@ public class IncomeView extends JDialog {
 
 	private void SetTextForAutomaticSelected() {
 		pnlPalletPlace.setVisible(true);
-		lblPalletPlace
-				.setText("<html>Автоматично избрано складово място: " + ExcelFile.GetPalletName(rowToSave) + "</html>");
+		lblPalletPlace.setText("<html>Автоматично избрано складово място: " + tblMain.getModel().getValueAt(rowToSave, 0).toString() + "</html>"); 
+				//.setText("<html>Автоматично избрано складово място: " + ExcelFile.GetPalletName(rowToSave) + "</html>");
 
 	}
 
 	private PalletModel SaveData() {
 		PalletModel pm = new PalletModel();
 		pm.setRow(rowToSave);
-		pm.setPalletName(ExcelFile.GetPalletName(rowToSave));
+		pm.setPalletName(tblMain.getModel().getValueAt(rowToSave, 0).toString());
 		pm.setBatteryType(txtBatteryType.getText());
 		pm.setQuantityReal(Integer.parseInt(txtQuantityReal.getText()));
 		pm.setQuantity(Integer.parseInt(txtQuantity.getText()));
@@ -483,9 +483,9 @@ public class IncomeView extends JDialog {
 		if (selectedRow != -1) {
 			int column = 0;
 
-			String value = tblMain.getModel().getValueAt(selectedRow, column).toString();
+			String palletName = tblMain.getModel().getValueAt(selectedRow, column).toString();
 
-			rowToSave = ExcelFile.GetPlaceRow(value);
+			rowToSave = ExcelFile.FindPalletRow(palletName);
 
 		} else {
 			if (!txtBatteryType.getText().isEmpty()) {
