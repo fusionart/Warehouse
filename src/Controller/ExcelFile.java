@@ -1,4 +1,4 @@
-package Controller;
+package controller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,9 +28,9 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
 
-import Model.PalletModel;
-import View.LoadingScreen;
-import View.MainView;
+import model.PalletModel;
+import views.LoadingScreen;
+import views.MainView;
 
 public class ExcelFile {
 

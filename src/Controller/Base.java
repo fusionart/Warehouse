@@ -1,4 +1,4 @@
-package Controller;
+package controller;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 
-import View.LoadingScreen;
+import views.LoadingScreen;
 
 public class Base {
 	public final static String DOT = ".";

@@ -1,4 +1,4 @@
-package Controller;
+package controller;
 
 import java.awt.Component;
 import java.time.LocalDate;

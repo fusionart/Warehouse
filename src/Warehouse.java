@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
 
-import Controller.Base;
-import View.MainView;
+import controller.Base;
+import views.MainView;
 
 public class Warehouse {
 
