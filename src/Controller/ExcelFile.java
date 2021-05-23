@@ -253,6 +253,62 @@ public class ExcelFile {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void SaveSwapData(List<PalletModel> pmList) {
+		FileInputStream file = null;
+		XSSFWorkbook workbook = null;
+		try {
+			file = new FileInputStream(new File(Base.mainDbFile));
+			workbook = new XSSFWorkbook(file);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		XSSFSheet sheet = workbook.getSheetAt(0);
+
+		XSSFCell cellToUpdate;
+
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pm = (PalletModel) itr.next();
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(1, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getBatteryType());
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getQuantityReal());
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getQuantity());
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(4, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getProductionDate()));
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(5, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getStatus());
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(6, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(BaseMethods.FormatDate(pm.getIncomeDate()));
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(7, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(BaseMethods.FormatTime(pm.getIncomeTime()));
+
+			cellToUpdate = sheet.getRow(pm.getRow()).getCell(8, MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			cellToUpdate.setCellValue(pm.getIsReserved());
+		}
+
+		try {
+			file.close();
+			FileOutputStream outputStream = new FileOutputStream(Base.mainDbFile);
+			workbook.write(outputStream);
+			workbook.close();
+			outputStream.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public static void SaveData(PalletModel pm) {
 		FileInputStream file = null;

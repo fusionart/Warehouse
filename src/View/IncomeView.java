@@ -11,7 +11,6 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
 
 import ColorRenderers.IncomeReservedColorRenderer;
@@ -20,32 +19,10 @@ import Controller.BaseMethods;
 import Controller.ExcelFile;
 import Model.PalletModel;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import java.awt.BorderLayout;
-import java.awt.event.KeyAdapter;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class IncomeView extends JDialog {
 
@@ -94,19 +71,8 @@ public class IncomeView extends JDialog {
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
 
-		JButton btnSave = new JButton("Запази");
-//		btnSave.addKeyListener(new KeyAdapter() {
-//			@Override
-//			public void keyPressed(KeyEvent e) {
-//				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-//					if (ValidateForm()) {
-//						SaveData();
-//					}
-//				}
-//			}
-//		});
-		
-		btnSave.addActionListener(new ActionListener() {
+		Action saveAction = new AbstractAction() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (ValidateForm()) {
 					PalletModel pm = SaveData();
@@ -121,10 +87,37 @@ public class IncomeView extends JDialog {
 					});
 				}
 			}
-		});
+		};
+
+		JButton btnSave = new JButton("Запази");
 		btnSave.setBounds(0, 0, 150, 30);
 		pnlButtons.add(btnSave);
 		btnSave.setFont(Base.DEFAULT_FONT);
+		//Add F10 shortcut to save
+		InputMap inputMap = btnSave.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap actionMap = btnSave.getActionMap();
+
+		inputMap.put(KeyStroke.getKeyStroke("F10"), "saveAction");
+		actionMap.put("saveAction", saveAction);
+
+		btnSave.addActionListener(saveAction);
+
+//		btnSave.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				if (ValidateForm()) {
+//					PalletModel pm = SaveData();
+//
+//					SummaryView summaryView = new SummaryView(CreateSummaryString(pm));
+//					summaryView.addWindowListener(new WindowAdapter() {
+//						@Override
+//						public void windowClosed(WindowEvent e) {
+//							super.windowClosed(e);
+//							dispose();
+//						}
+//					});
+//				}
+//			}
+//		});
 
 		JButton btnCancel = new JButton("Отказ");
 		btnCancel.setBounds(160, 0, 150, 30);
@@ -430,8 +423,10 @@ public class IncomeView extends JDialog {
 
 	private void SetTextForAutomaticSelected() {
 		pnlPalletPlace.setVisible(true);
-		lblPalletPlace.setText("<html>Автоматично избрано складово място: " + tblMain.getModel().getValueAt(rowToSave, 0).toString() + "</html>"); 
-				//.setText("<html>Автоматично избрано складово място: " + ExcelFile.GetPalletName(rowToSave) + "</html>");
+		lblPalletPlace.setText("<html>Автоматично избрано складово място: "
+				+ tblMain.getModel().getValueAt(rowToSave, 0).toString() + "</html>");
+		// .setText("<html>Автоматично избрано складово място: " +
+		// ExcelFile.GetPalletName(rowToSave) + "</html>");
 
 	}
 
@@ -453,7 +448,7 @@ public class IncomeView extends JDialog {
 
 		ExcelFile.SaveData(pm);
 		return pm;
-		//ShowNotify(pm);
+		// ShowNotify(pm);
 	}
 
 	private String CreateSummaryString(PalletModel pm) {
@@ -465,7 +460,7 @@ public class IncomeView extends JDialog {
 //		if (result == JOptionPane.OK_OPTION) {
 //			dispose();
 //		}
-		//"<html>Изписано количество: <br>" + sb.toString() + "</html>"
+		// "<html>Изписано количество: <br>" + sb.toString() + "</html>"
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html>Заприходено количество: <br>");
 		sb.append("Складово място ");

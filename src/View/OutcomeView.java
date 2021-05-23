@@ -25,10 +25,16 @@ import Controller.BaseMethods;
 import Controller.ExcelFile;
 import Model.PalletModel;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.ImageIcon;
+import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -63,6 +69,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private JTextField txtQuantity;
 	private JTable tblMain;
 	private JLabel lblBackground;
+	private JButton btnSwap;
 
 	private static int selectedRow = -1;
 	private static int rowToSave;
@@ -104,12 +111,73 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		setLocationRelativeTo(null);
 
 		JPanel pnlButtons = new JPanel();
-		pnlButtons.setBounds(1046, 727, 310, 30);
+		pnlButtons.setBounds(937, 727, 419, 30);
 		pnlButtons.setBackground(new Color(255, 255, 255, 150));
 		contentPane.add(pnlButtons);
-		pnlButtons.setLayout(null);
+
+		Action saveAction = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!pmList.isEmpty()) {
+					SaveData();
+					SummaryView summaryView = new SummaryView(CreateSummaryString());
+					summaryView.addWindowListener(new WindowAdapter() {
+						@Override
+						public void windowClosed(WindowEvent e) {
+							super.windowClosed(e);
+							dispose();
+						}
+					});
+				} else {
+					JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
+							JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		};
+		GridBagLayout gbl_pnlButtons = new GridBagLayout();
+		gbl_pnlButtons.columnWidths = new int[] { 0, 150, 150, 0 };
+		gbl_pnlButtons.rowHeights = new int[] { 30, 0 };
+		gbl_pnlButtons.columnWeights = new double[] { 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gbl_pnlButtons.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+		pnlButtons.setLayout(gbl_pnlButtons);
+
+		btnSwap = new JButton("Размяна");
+		btnSwap.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SwapData();
+				SummaryView summaryView = new SummaryView(CreateSwapSummaryString());
+				summaryView.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosed(WindowEvent e) {
+						super.windowClosed(e);
+						dispose();
+					}
+				});
+			}
+		});
+		GridBagConstraints gbc_btnSwap = new GridBagConstraints();
+		gbc_btnSwap.fill = GridBagConstraints.BOTH;
+		gbc_btnSwap.insets = new Insets(0, 0, 0, 5);
+		gbc_btnSwap.gridx = 0;
+		gbc_btnSwap.gridy = 0;
+		pnlButtons.add(btnSwap, gbc_btnSwap);
+		btnSwap.setFont(Base.DEFAULT_FONT);
+		btnSwap.setEnabled(false);
 
 		JButton btnSave = new JButton("Запази");
+		GridBagConstraints gbc_btnSave = new GridBagConstraints();
+		gbc_btnSave.fill = GridBagConstraints.BOTH;
+		gbc_btnSave.insets = new Insets(0, 0, 0, 5);
+		gbc_btnSave.gridx = 1;
+		gbc_btnSave.gridy = 0;
+		pnlButtons.add(btnSave, gbc_btnSave);
+		btnSave.setFont(Base.DEFAULT_FONT);
+		// Add F10 shortcut to save
+		InputMap inputMap = btnSave.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap actionMap = btnSave.getActionMap();
+
+		btnSave.addActionListener(saveAction);
+
 		btnSave.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -132,41 +200,23 @@ public class OutcomeView extends JDialog implements TableModelListener {
 				}
 			}
 		});
-		btnSave.setBounds(0, 0, 150, 30);
-		pnlButtons.add(btnSave);
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// if (ValidateForm()) {
-				if (!pmList.isEmpty()) {
-					SaveData();
-					SummaryView summaryView = new SummaryView(CreateSummaryString());
-					summaryView.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosed(WindowEvent e) {
-							super.windowClosed(e);
-							dispose();
-						}
-					});
-				} else {
-					JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
-							JOptionPane.INFORMATION_MESSAGE);
-				}
-				// }
-			}
-		});
-		btnSave.setFont(Base.DEFAULT_FONT);
 
 		JButton btnCancel = new JButton("Отказ");
-		btnCancel.setBounds(160, 0, 150, 30);
-		pnlButtons.add(btnCancel);
+		GridBagConstraints gbc_btnCancel = new GridBagConstraints();
+		gbc_btnCancel.fill = GridBagConstraints.BOTH;
+		gbc_btnCancel.gridx = 2;
+		gbc_btnCancel.gridy = 0;
+		pnlButtons.add(btnCancel, gbc_btnCancel);
 		btnCancel.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
 		});
 		btnCancel.setFont(Base.DEFAULT_FONT);
+
+		inputMap.put(KeyStroke.getKeyStroke("F10"), "saveAction");
+		actionMap.put("saveAction", saveAction);
 
 		JPanel pnlInput = new JPanel() {
 			protected void paintComponent(Graphics g) {
@@ -383,6 +433,15 @@ public class OutcomeView extends JDialog implements TableModelListener {
 //						+ tblMain.getModel().getValueAt(row, 3).toString());
 //				System.out.println(columnName + ": " + false);
 			}
+			AllowSwap();
+		}
+	}
+
+	private void AllowSwap() {
+		if (rowsChecked == 2) {
+			btnSwap.setEnabled(true);
+		} else {
+			btnSwap.setEnabled(false);
 		}
 	}
 
@@ -465,6 +524,31 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		// pm.setQuantity(Integer.parseInt(txtPallet.getText()));
 
 	}
+	
+	private void SwapData() {
+		int tempRow = 0;
+		String tempPalletName;
+		PalletModel pm = pmList.get(0);
+		PalletModel pm1 = pmList.get(1);
+		
+		tempRow = pm.getRow();
+		pm.setRow(pm1.getRow());
+		pm1.setRow(tempRow);
+		
+		tempPalletName = pm.getPalletName();
+		pm.setPalletName(pm1.getPalletName());
+		pm1.setPalletName(tempPalletName);
+		
+		pm.setStatus(false);
+		pm1.setStatus(false);
+		
+		pmList.clear();
+		pmList.add(pm);
+		pmList.add(pm1);
+		
+		ExcelFile.SaveSwapData(pmList);
+		
+	}
 
 	private String CreateSummaryString() {
 		StringBuilder sb = new StringBuilder();
@@ -481,15 +565,33 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			sb.append(pmTemp.getQuantityReal());
 			sb.append("<br>");
 		}
-
+		
 		sb.append("</html>");
 		return sb.toString();
+	}
+	
+	private String CreateSwapSummaryString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html>Разменени палето места: <br>");
 
-//		int result = JOptionPane.showConfirmDialog(null, "<html>Изписано количество: <br>" + sb.toString() + "</html>",
-//				"Успешен запис", JOptionPane.DEFAULT_OPTION);
-//		if (result == JOptionPane.OK_OPTION) {
-//			this.dispose();
-//		}
+		Iterator itr = pmList.iterator();
+		while (itr.hasNext()) {
+			PalletModel pmTemp = (PalletModel) itr.next();
+			sb.append("Складово място: ");
+			sb.append(pmTemp.getPalletName());
+			sb.append(", Тип Батерия: ");
+			sb.append(pmTemp.getBatteryType());
+			sb.append(", Количество: ");
+			sb.append(pmTemp.getQuantityReal());
+			sb.append("<br>");
+		}
+		
+		sb.append("<br>");
+		sb.append("Описаните палето места са след размяна!");
+		sb.append("<br>");
+		
+		sb.append("</html>");
+		return sb.toString();
 	}
 
 	private Boolean ValidateQuantity(PalletModel pm) {
