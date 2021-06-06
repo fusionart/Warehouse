@@ -29,8 +29,10 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
 
 import model.PalletModel;
+import views.IncomeView;
 import views.LoadingScreen;
 import views.MainView;
+import views.OutcomeView;
 
 public class ExcelFile {
 
@@ -41,8 +43,18 @@ public class ExcelFile {
 	private static HashMap<Integer, PalletModel> allRows;
 	private static Boolean tableExists = false;
 
+	private static int callingFrame;
+
 	private static Connection mainConnection;
 	private static Statement mainStatement;
+
+	public static int getCallingFrame() {
+		return callingFrame;
+	}
+
+	public static void setCallingFrame(int callingFrame) {
+		ExcelFile.callingFrame = callingFrame;
+	}
 
 	private static void ReadExcelFile() {
 		File file = new File(Base.mainDbFile);
@@ -70,7 +82,7 @@ public class ExcelFile {
 		}
 	}
 
-	public static void CheckIfFileIsEdited() {
+	public static synchronized void CheckIfFileIsEdited() {
 		File file = new File(Base.mainDbFile);
 		long currentTimeStamp = file.lastModified();
 		if (currentTimeStamp != timeStamp) {
@@ -253,7 +265,7 @@ public class ExcelFile {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void SaveSwapData(List<PalletModel> pmList) {
 		FileInputStream file = null;
 		XSSFWorkbook workbook = null;
@@ -361,6 +373,7 @@ public class ExcelFile {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 
 	private static void ReadAllRows() {
@@ -378,6 +391,7 @@ public class ExcelFile {
 		}
 
 		LoadingScreen ls = new LoadingScreen();
+		Sheet sheet = GetSheet();
 
 		new SwingWorker<Void, Integer>() {
 			int i = 0;
@@ -385,7 +399,6 @@ public class ExcelFile {
 
 			@Override
 			public Void doInBackground() {
-				Sheet sheet = GetSheet();
 
 				int rowCount = sheet.getPhysicalNumberOfRows();
 
@@ -451,6 +464,20 @@ public class ExcelFile {
 
 				MainView.UpdateGui();
 				MainView.SetVisibleButtons(true);
+
+				int frame = getCallingFrame();
+
+				switch (frame) {
+				case 1:
+					IncomeView.UpdateTable();
+					break;
+				case 2:
+					OutcomeView.UpdateTable();
+					break;
+
+				default:
+					break;
+				}
 			}
 
 			@Override
@@ -764,7 +791,6 @@ public class ExcelFile {
 	}
 
 	private static Sheet GetSheet() {
-		CheckIfFileIsEdited();
 		Sheet sheet = workbook.getSheetAt(0);
 
 		return sheet;
@@ -780,6 +806,7 @@ public class ExcelFile {
 
 	public static HashMap<Integer, PalletModel> GetAllRows() {
 		CheckIfFileIsEdited();
+
 		HashMap<Integer, PalletModel> data = new HashMap<Integer, PalletModel>();
 		data.putAll(allRows);
 		return data;

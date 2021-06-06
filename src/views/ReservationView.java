@@ -119,61 +119,24 @@ public class ReservationView extends JDialog implements TableModelListener {
 		btnSave.setBounds(0, 0, 150, 30);
 		pnlButtons.add(btnSave);
 		btnSave.setFont(Base.DEFAULT_FONT);
-		btnSave.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					if (rdbtnOutcome.isSelected()) {
-						if (!pmList.isEmpty()) {
-							SaveDataOutcome();
-
-							SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
-							summaryView.addWindowListener(new WindowAdapter() {
-								@Override
-								public void windowClosed(WindowEvent e) {
-									super.windowClosed(e);
-									dispose();
-								}
-							});
-						} else {
-							JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
-									JOptionPane.INFORMATION_MESSAGE);
-						}
-					}
-
-					if (rdbtnIncome.isSelected()) {
-
-						PalletModel pm = SaveDataIncome();
-
-						if (pm != null) {
-							SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
-							summaryView.addWindowListener(new WindowAdapter() {
-								@Override
-								public void windowClosed(WindowEvent e) {
-									super.windowClosed(e);
-									dispose();
-								}
-							});
-						}
-					}
-				}
-			}
-		});
 
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (rdbtnOutcome.isSelected()) {
 					if (!pmList.isEmpty()) {
-						SaveDataOutcome();
-
 						SummaryView summaryView = new SummaryView(CreateSummaryStringOutcome());
-						summaryView.addWindowListener(new WindowAdapter() {
-							@Override
-							public void windowClosed(WindowEvent e) {
-								super.windowClosed(e);
-								dispose();
-							}
-						});
+						Boolean isOkClicked = summaryView.run();
+						if (isOkClicked) {
+							SaveDataOutcome();
+
+							summaryView.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosed(WindowEvent e) {
+									super.windowClosed(e);
+									dispose();
+								}
+							});
+						}
 					} else {
 						JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
 								JOptionPane.INFORMATION_MESSAGE);
@@ -182,17 +145,23 @@ public class ReservationView extends JDialog implements TableModelListener {
 
 				if (rdbtnIncome.isSelected()) {
 
-					PalletModel pm = SaveDataIncome();
+					PalletModel pm = CreateModelToSave();
 
 					if (pm != null) {
 						SummaryView summaryView = new SummaryView(CreateSummaryStringIncome(pm));
-						summaryView.addWindowListener(new WindowAdapter() {
-							@Override
-							public void windowClosed(WindowEvent e) {
-								super.windowClosed(e);
-								dispose();
-							}
-						});
+						Boolean isOkClicked = summaryView.run();
+						if (isOkClicked) {
+							SaveDataIncome(pm);
+							selectedRow = -1;
+
+							summaryView.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosed(WindowEvent e) {
+									super.windowClosed(e);
+									dispose();
+								}
+							});
+						}
 					}
 				}
 			}
@@ -572,7 +541,12 @@ public class ReservationView extends JDialog implements TableModelListener {
 		}
 	}
 
-	private PalletModel SaveDataIncome() {
+	private void SaveDataIncome(PalletModel pm) {
+
+		ExcelFile.SaveData(pm);
+	}
+
+	private PalletModel CreateModelToSave() {
 		if (selectedRow != -1) {
 			PalletModel pm = new PalletModel();
 			pm.setRow(rowToSave);
@@ -587,18 +561,12 @@ public class ReservationView extends JDialog implements TableModelListener {
 			pm.setIsReserved(true);
 			pm.setDestination(null);
 
-			selectedRow = -1;
-
-			ExcelFile.SaveData(pm);
-
 			return pm;
 		} else {
 			JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
 					JOptionPane.INFORMATION_MESSAGE);
 			return null;
 		}
-
-		// ShowNotify(pm);
 	}
 
 	private String CreateSummaryStringIncome(PalletModel pm) {

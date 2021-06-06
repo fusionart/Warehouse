@@ -39,17 +39,25 @@ public class PrintOutcome implements Printable {
 		g.drawString("Количество", 350, 100);
 
 		int y = 115;
-		
+		int totalQuantity = 0;
+
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {
 			PalletModel pm = (PalletModel) itr.next();
-			
+
 			g.drawString(pm.getPalletName(), 50, y);
 			g.drawString(pm.getBatteryType(), 200, y);
 			g.drawString(String.valueOf(pm.getQuantityReal()), 350, y);
-			
-			y+=13;
+
+			totalQuantity += pm.getQuantityReal();
+
+			y += 13;
 		}
+
+		g.drawString("---------------------------------------------------------------------------------------------------", 50, y += 13);
+		g.drawString("Общо:", 290, y + 13);
+		g.drawString(String.valueOf(totalQuantity), 350, y + 13);
+		
 
 		// tell the caller that this page is part
 		// of the printed document

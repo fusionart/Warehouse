@@ -79,7 +79,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private List<PalletModel> pmList = new ArrayList<>();
 
-	private int selectedQuantity;
+	private static int selectedQuantity;
 	private int rowsChecked;
 	private Boolean isFiltered = false;
 
@@ -95,8 +95,6 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	 * @throws IOException
 	 */
 	public OutcomeView() throws IOException {
-
-		int selectedQuantity;
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		Image frameIcon = Toolkit.getDefaultToolkit().getImage(Base.icon);
@@ -122,28 +120,35 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!pmList.isEmpty()) {
-					SaveData();
 					SummaryView summaryView = new SummaryView(CreateSummaryString());
-					summaryView.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosed(WindowEvent e) {
-							super.windowClosed(e);
-							dispose();
+					Boolean isOkClicked = summaryView.run();
+					if (isOkClicked) {
+						SaveData();
+						FillTable();
+
+						PrinterJob job = PrinterJob.getPrinterJob();
+						job.setPrintable(new PrintOutcome(pmList));
+						if (job.printDialog()) {
+							try {
+
+								// print the label
+								job.print();
+
+							} catch (PrinterException pe) {
+								// System.out.println(pe);
+							}
 						}
-					});
 
-					PrinterJob job = PrinterJob.getPrinterJob();
-					job.setPrintable(new PrintOutcome(pmList));
-					if (job.printDialog()) {
-						try {
-
-							// print the label
-							job.print();
-
-						} catch (PrinterException pe) {
-							System.out.println(pe);
-						}
+						ResetForm();
 					}
+//						summaryView.addWindowListener(new WindowAdapter() {
+//							@Override
+//							public void windowClosed(WindowEvent e) {
+//								super.windowClosed(e);
+//								dispose();
+//							}
+//						});
+
 				} else {
 					JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
 							JOptionPane.INFORMATION_MESSAGE);
@@ -159,16 +164,28 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 		btnSwap = new JButton("Размяна");
 		btnSwap.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
+
 				SwapData();
 				SummaryView summaryView = new SummaryView(CreateSwapSummaryString());
-				summaryView.addWindowListener(new WindowAdapter() {
-					@Override
-					public void windowClosed(WindowEvent e) {
-						super.windowClosed(e);
-						dispose();
-					}
-				});
+				Boolean isOkClicked = summaryView.run();
+				if (isOkClicked) {
+					SaveSwapData();
+					FillTable();
+					ResetForm();
+				} else {
+					FillTable();
+					ResetForm();
+				}
+
+//				summaryView.addWindowListener(new WindowAdapter() {
+//					@Override
+//					public void windowClosed(WindowEvent e) {
+//						super.windowClosed(e);
+//						dispose();
+//					}
+//				});
 			}
 		});
 		GridBagConstraints gbc_btnSwap = new GridBagConstraints();
@@ -195,24 +212,28 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		btnSave.addActionListener(saveAction);
 
 		btnSave.addKeyListener(new KeyAdapter() {
+
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					if (!pmList.isEmpty()) {
-						SaveData();
+
 						SummaryView summaryView = new SummaryView(CreateSummaryString());
-						summaryView.addWindowListener(new WindowAdapter() {
-							@Override
-							public void windowClosed(WindowEvent e) {
-								super.windowClosed(e);
-								dispose();
-							}
-						});
+						Boolean isOkClicked = summaryView.run();
+						if (isOkClicked) {
+							SaveData();
+						}
+//						summaryView.addWindowListener(new WindowAdapter() {
+//							@Override
+//							public void windowClosed(WindowEvent e) {
+//								super.windowClosed(e);
+//								dispose();
+//							}
+//						});
 					} else {
 						JOptionPane.showMessageDialog(null, "Моля изберете Складово място", "Грешка",
 								JOptionPane.INFORMATION_MESSAGE);
 					}
-
 				}
 			}
 		});
@@ -431,6 +452,14 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	}
 
+	private void ResetForm() {
+		pmList.clear();
+		rowsChecked = 0;
+		selectedQuantity = 0;
+		txtQuantity.setText("");
+		btnSwap.setEnabled(false);
+	}
+
 	public void tableChanged(TableModelEvent e) {
 		int row = e.getFirstRow();
 		int column = e.getColumn();
@@ -561,9 +590,10 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		pmList.clear();
 		pmList.add(pm);
 		pmList.add(pm1);
+	}
 
+	private void SaveSwapData() {
 		ExcelFile.SaveSwapData(pmList);
-
 	}
 
 	private String CreateSummaryString() {
@@ -635,6 +665,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		// frmMain.setComponentZOrder(lblBackground, 0);
 	}
 
+	// Fill filtered table
 	private void FillTable(HashMap<Integer, PalletModel> data) {
 		PalletModel pm;
 		defaultTableModel.setRowCount(0);
@@ -649,7 +680,14 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		}
 	}
 
-	private void FillTable() {
+	public static void UpdateTable() {
+		FillTable();
+	}
+
+	// Fill table with all records Status == false
+	private static void FillTable() {
+
+		ExcelFile.setCallingFrame(2);
 
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllNotFreePlaces();
 		PalletModel pm;
