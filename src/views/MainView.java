@@ -422,7 +422,7 @@ public class MainView extends JFrame {
 		RowFilter<DefaultTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
 		try {
-			rf = RowFilter.regexFilter(txtSearchPallet.getText(), 0);
+			rf = RowFilter.regexFilter("(?i)" + txtSearchPallet.getText(), 0);
 		} catch (java.util.regex.PatternSyntaxException e) {
 			return;
 		}
@@ -433,7 +433,7 @@ public class MainView extends JFrame {
 		RowFilter<DefaultTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.
 		try {
-			rf = RowFilter.regexFilter(txtSearchBatteryType.getText(), 1);
+			rf = RowFilter.regexFilter("(?i)" + txtSearchBatteryType.getText(), 1);
 		} catch (java.util.regex.PatternSyntaxException e) {
 			return;
 		}

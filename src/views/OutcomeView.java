@@ -18,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import ColorRenderers.IncomeReservedColorRenderer;
 import controller.Base;
@@ -37,6 +38,7 @@ import javax.swing.JDialog;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -57,6 +59,8 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -78,6 +82,9 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private static int rowToSave;
 
 	private List<PalletModel> pmList = new ArrayList<>();
+	
+	private static DefaultTableModel defaultTableModel;
+	private TableRowSorter<DefaultTableModel> sorter;
 
 	private static int selectedQuantity;
 	private int rowsChecked;
@@ -85,7 +92,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private static int excelFileRow;
 
-	private static DefaultTableModel defaultTableModel;
+
 	private static String header[] = { "Избор", "Складово място", "Тип батерия", "Количество", "Количество по документ",
 			"Дата на производство", "Дата на приход", "Час на приход", "Статус", "Резервация" };
 
@@ -289,19 +296,32 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		lblBatteryType.setFont(Base.DEFAULT_FONT);
 
 		txtBatteryType = new JTextField();
-		txtBatteryType.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (!txtBatteryType.getText().trim().isEmpty()) {
-					FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
-					isFiltered = true;
-				} else {
-					if (txtPallet.getText().trim().isEmpty() && isFiltered) {
-						FillTable();
-					}
-				}
+		txtBatteryType.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				FilterBatteryType();
+			}
+
+			public void insertUpdate(DocumentEvent e) {
+				FilterBatteryType();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				FilterBatteryType();
 			}
 		});
+//		txtBatteryType.addFocusListener(new FocusAdapter() {
+//			@Override
+//			public void focusLost(FocusEvent e) {
+//				if (!txtBatteryType.getText().trim().isEmpty()) {
+//					FillTable(ExcelFile.FilterBatteryType(txtBatteryType.getText()));
+//					isFiltered = true;
+//				} else {
+//					if (txtPallet.getText().trim().isEmpty() && isFiltered) {
+//						FillTable();
+//					}
+//				}
+//			}
+//		});
 		GridBagConstraints gbc_txtBatteryType = new GridBagConstraints();
 		gbc_txtBatteryType.fill = GridBagConstraints.BOTH;
 		gbc_txtBatteryType.gridx = 0;
@@ -331,19 +351,32 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		lblPallet.setFont(Base.DEFAULT_FONT);
 
 		txtPallet = new JTextField();
-		txtPallet.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (!txtPallet.getText().trim().isEmpty()) {
-					FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
-					isFiltered = true;
-				} else {
-					if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
-						FillTable();
-					}
-				}
+		txtPallet.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				FilterPallet();
+			}
+
+			public void insertUpdate(DocumentEvent e) {
+				FilterPallet();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				FilterPallet();
 			}
 		});
+//		txtPallet.addFocusListener(new FocusAdapter() {
+//			@Override
+//			public void focusLost(FocusEvent e) {
+//				if (!txtPallet.getText().trim().isEmpty()) {
+//					FillTable(ExcelFile.FilterPallet(txtPallet.getText().toUpperCase()));
+//					isFiltered = true;
+//				} else {
+//					if (txtBatteryType.getText().trim().isEmpty() && isFiltered) {
+//						FillTable();
+//					}
+//				}
+//			}
+//		});
 		GridBagConstraints gbc_txtPallet = new GridBagConstraints();
 		gbc_txtPallet.fill = GridBagConstraints.BOTH;
 		gbc_txtPallet.gridx = 0;
@@ -404,8 +437,10 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		defaultTableModel = new DefaultTableModel(0, 0);
 
 		defaultTableModel.setColumnIdentifiers(header);
+		
+		sorter = new TableRowSorter<DefaultTableModel>(defaultTableModel);
 
-		tblMain = new JTable() {
+		tblMain = new JTable(defaultTableModel) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 				return column == 0;
@@ -438,10 +473,11 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		tblMain.getTableHeader().setFont(Base.DEFAULT_FONT);
 		tblMain.getTableHeader().setResizingAllowed(true);
 		scrollPane.setViewportView(tblMain);
-		tblMain.setModel(defaultTableModel);
+		//tblMain.setModel(defaultTableModel);
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		tblMain.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblMain.getModel().addTableModelListener(this);
+		tblMain.setRowSorter(sorter);
 		FillTable();
 		BaseMethods.ResizeColumnWidth(tblMain);
 		// IncomeReservedColorRenderer ircr = new IncomeReservedColorRenderer();
@@ -702,5 +738,27 @@ public class OutcomeView extends JDialog implements TableModelListener {
 					BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(), pm.getStatus(),
 					pm.getIsReserved() });
 		}
+	}
+	
+	private void FilterPallet() {
+		RowFilter<DefaultTableModel, Object> rf = null;
+		// If current expression doesn't parse, don't update.
+		try {
+			rf = RowFilter.regexFilter("(?i)" + txtPallet.getText(), 1);
+		} catch (java.util.regex.PatternSyntaxException e) {
+			return;
+		}
+		sorter.setRowFilter(rf);
+	}
+
+	private void FilterBatteryType() {
+		RowFilter<DefaultTableModel, Object> rf = null;
+		// If current expression doesn't parse, don't update.
+		try {
+			rf = RowFilter.regexFilter("(?i)" + txtBatteryType.getText(), 2);
+		} catch (java.util.regex.PatternSyntaxException e) {
+			return;
+		}
+		sorter.setRowFilter(rf);
 	}
 }

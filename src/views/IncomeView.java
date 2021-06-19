@@ -6,8 +6,12 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,13 +37,15 @@ public class IncomeView extends JDialog {
 
 	private JPanel contentPane;
 	private JTextField txtBatteryType;
-	private JTextField txtDate;
+	private JFormattedTextField txtDate;
 	private JTextField txtQuantity;
 	private JTextField txtQuantityReal;
 	private JTable tblMain;
 	private JLabel lblBackground;
 	private JLabel lblPalletPlace;
 	private JPanel pnlPalletPlace;
+	private JPanel pnlLastSaved;
+	private JLabel lblLastSaved;
 
 	private static int selectedRow = -1;
 	private static int rowToSave;
@@ -90,7 +96,7 @@ public class IncomeView extends JDialog {
 
 						ResetForm();
 						ExcelFile.CheckIfFileIsEdited();
-
+						SetTextForLastSaved(pm);
 					}
 
 //					summaryView.addWindowListener(new WindowAdapter() {
@@ -221,10 +227,12 @@ public class IncomeView extends JDialog {
 		pnlDate.add(lblDate, gbc_lblDate);
 		lblDate.setFont(Base.DEFAULT_FONT);
 
-		txtDate = new JTextField();
+		DateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy");
+		txtDate = new JFormattedTextField(dateFormat);
 		txtDate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				txtQuantityReal.requestFocus();
+
 			}
 		});
 		GridBagConstraints gbc_txtDate = new GridBagConstraints();
@@ -356,6 +364,27 @@ public class IncomeView extends JDialog {
 		pnlPalletPlace.add(lblPalletPlace);
 		lblPalletPlace.setFont(Base.DEFAULT_FONT);
 
+		pnlLastSaved = new JPanel() {
+			protected void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		pnlLastSaved.setBorder(new TitledBorder(
+				new EtchedBorder(EtchedBorder.LOWERED, new Color(100, 149, 237), new Color(160, 160, 160)),
+				"Последно въведен", TitledBorder.LEADING, TitledBorder.TOP, Base.DEFAULT_FONT, null));
+		pnlLastSaved.setBounds(20, 456, 250, 100);
+		pnlLastSaved.setOpaque(false);
+		pnlLastSaved.setBackground(new Color(255, 255, 255, 0));
+		pnlLastSaved.setVisible(false);
+		pnlInput.add(pnlLastSaved);
+		pnlLastSaved.setLayout(new BorderLayout(0, 0));
+		
+		lblLastSaved = new JLabel("");
+		lblLastSaved.setFont(Base.DEFAULT_FONT);
+		pnlLastSaved.add(lblLastSaved);
+
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(310, 11, 1046, 705);
 		contentPane.add(scrollPane);
@@ -438,6 +467,15 @@ public class IncomeView extends JDialog {
 		// .setText("<html>Автоматично избрано складово място: " +
 		// ExcelFile.GetPalletName(rowToSave) + "</html>");
 
+	}
+	
+	private void SetTextForLastSaved(PalletModel pm) {
+		pnlLastSaved.setVisible(true);
+		lblLastSaved.setText(
+				"<html>Складово място: " + pm.getPalletName() +
+				"<br>Тип батерия: " + pm.getBatteryType() +
+				"<br>Количество: " + pm.getQuantityReal() +
+				"</html>");
 	}
 
 	private PalletModel CreateModelToSave() {
@@ -536,13 +574,13 @@ public class IncomeView extends JDialog {
 
 		// frmMain.setComponentZOrder(lblBackground, 0);
 	}
-	
+
 	public static void UpdateTable() {
 		FillTable();
 	}
 
 	private static void FillTable() {
-		
+
 		ExcelFile.setCallingFrame(1);
 
 		HashMap<Integer, PalletModel> data = ExcelFile.GetAllRows();

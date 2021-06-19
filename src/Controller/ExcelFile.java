@@ -478,6 +478,10 @@ public class ExcelFile {
 				default:
 					break;
 				}
+				
+				if (Base.showAllWarehouses) {
+					
+				}
 			}
 
 			@Override

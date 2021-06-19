@@ -50,8 +50,8 @@ public class Base {
 	public final static String STATISTICS = "statistics";
 
 	// Size
-	public final static int WIDTH = 1366;
-	public final static int HEIGHT = 768;
+	public final static int WIDTH = 1920;
+	public final static int HEIGHT = 950;
 	public final static int ELEMENT_HEIGHT = 30;
 	public final static int ELEMENT_OFFSET = 37;
 	public final static int PANEL_HEIGHT = 74;
