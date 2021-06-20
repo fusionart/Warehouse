@@ -3,6 +3,7 @@ package views;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
 
@@ -32,12 +33,13 @@ import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import javax.swing.SwingConstants;
 
 public class SummaryView extends JDialog implements ActionListener, DocumentListener {
 
 	private JPanel contentPane;
 
-	private final static int WIDTH = 550;
+	private final static int WIDTH = 620;
 	private final static int HEIGHT = 250;
 	private final static int SINGLE_ROW_HEIGHT = 21;
 	private JTextField txtConfirm;
@@ -65,7 +67,7 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 
 			finalHeight += (rows - 8) * 21;
 		}
-
+		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setPreferredSize(new Dimension(WIDTH, finalHeight));
@@ -74,7 +76,13 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 
 		pack();
 
-		JPanel panel = new JPanel();
+		JPanel panel = new JPanel() {
+			protected void paintComponent(Graphics g) {
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
 		panel.setBackground(new Color(255, 255, 255, 220));
 		panel.setBounds(10, 10, WIDTH - 20, finalHeight - 20);
 		contentPane.add(panel);
@@ -122,9 +130,9 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 		txtConfirm.setColumns(10);
 
 		txtConfirm.getDocument().addDocumentListener(this);
-		
+
 		DocumentFilter dfilter = new UpcaseFilter();
-		
+
 		((AbstractDocument) txtConfirm.getDocument()).setDocumentFilter(dfilter);
 
 		panel.add(lblSummary, BorderLayout.CENTER);
@@ -138,7 +146,6 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 		setLocationRelativeTo(null);
 		// setVisible(true);
 	}
-
 
 	public void insertString(DocumentFilter.FilterBypass fb, int offset, String text, AttributeSet attr)
 			throws BadLocationException {

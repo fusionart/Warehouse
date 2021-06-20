@@ -65,7 +65,7 @@ public class Base {
 	public final static DateTimeFormatter fileNameTimeFormat = DateTimeFormatter.ofPattern("HH-mm-ss");
 
 	// default fonts
-	public final static Font DEFAULT_FONT = new Font("Century Gothic", Font.BOLD, 16);
+	public final static Font DEFAULT_FONT = new Font("Century Gothic", Font.BOLD, 18);
 	public final static Font RADIO_BUTTON_FONT = new Font("Century Gothic", Font.BOLD, 14);
 
 	// default colors

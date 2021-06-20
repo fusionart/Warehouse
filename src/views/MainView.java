@@ -301,7 +301,7 @@ public class MainView extends JFrame {
 		});
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 11, 1346, 706);
+		scrollPane.setBounds(10, 11, 1900, 887);
 		contentPane.add(scrollPane);
 
 		sorter = new TableRowSorter<DefaultTableModel>(defaultTableModel);
@@ -323,7 +323,7 @@ public class MainView extends JFrame {
 		BaseMethods.ResizeColumnWidth(tblMain);
 
 		pnlButtons = new JPanel();
-		pnlButtons.setBounds(886, 728, 470, 30);
+		pnlButtons.setBounds(1440, 909, 470, 30);
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
 

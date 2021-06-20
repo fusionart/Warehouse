@@ -119,7 +119,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		setLocationRelativeTo(null);
 
 		JPanel pnlButtons = new JPanel();
-		pnlButtons.setBounds(937, 727, 419, 30);
+		pnlButtons.setBounds(1491, 909, 419, 30);
 		pnlButtons.setBackground(new Color(255, 255, 255, 150));
 		contentPane.add(pnlButtons);
 
@@ -269,7 +269,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 				super.paintComponent(g);
 			}
 		};
-		pnlInput.setBounds(10, 11, 290, 705);
+		pnlInput.setBounds(10, 11, 290, 887);
 		pnlInput.setOpaque(false);
 		pnlInput.setBackground(new Color(255, 255, 255, 200));
 		contentPane.add(pnlInput);
@@ -431,7 +431,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		});
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(310, 11, 1046, 705);
+		scrollPane.setBounds(310, 11, 1600, 887);
 		contentPane.add(scrollPane);
 
 		defaultTableModel = new DefaultTableModel(0, 0);

@@ -77,7 +77,7 @@ public class IncomeView extends JDialog {
 		setLocationRelativeTo(null);
 
 		JPanel pnlButtons = new JPanel();
-		pnlButtons.setBounds(1046, 727, 310, 30);
+		pnlButtons.setBounds(1600, 909, 310, 30);
 		pnlButtons.setBackground(new Color(255, 255, 255, 150));
 		contentPane.add(pnlButtons);
 
@@ -154,7 +154,7 @@ public class IncomeView extends JDialog {
 				super.paintComponent(g);
 			}
 		};
-		pnlInput.setBounds(10, 11, 290, 705);
+		pnlInput.setBounds(10, 11, 290, 887);
 		pnlInput.setOpaque(false);
 		pnlInput.setBackground(new Color(255, 255, 255, 200));
 		contentPane.add(pnlInput);
@@ -386,7 +386,7 @@ public class IncomeView extends JDialog {
 		pnlLastSaved.add(lblLastSaved);
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(310, 11, 1046, 705);
+		scrollPane.setBounds(310, 11, 1600, 887);
 		contentPane.add(scrollPane);
 
 		defaultTableModel = new DefaultTableModel(0, 0);
