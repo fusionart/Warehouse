@@ -634,12 +634,12 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private String CreateSummaryString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("<html>Изписано количество: <br>");
+		sb.append("<html>&nbsp;&nbsp;Изписано количество: <br>");
 
 		Iterator itr = pmList.iterator();
 		while (itr.hasNext()) {
 			PalletModel pmTemp = (PalletModel) itr.next();
-			sb.append("Складово място: ");
+			sb.append("&nbsp;&nbsp;&nbsp;&nbsp;Складово място: ");
 			sb.append(pmTemp.getPalletName());
 			sb.append(", Тип Батерия: ");
 			sb.append(pmTemp.getBatteryType());

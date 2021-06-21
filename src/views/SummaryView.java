@@ -39,7 +39,7 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 
 	private JPanel contentPane;
 
-	private final static int WIDTH = 620;
+	private final static int WIDTH = 800;
 	private final static int HEIGHT = 250;
 	private final static int SINGLE_ROW_HEIGHT = 21;
 	private JTextField txtConfirm;
@@ -83,7 +83,7 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 				super.paintComponent(g);
 			}
 		};
-		panel.setBackground(new Color(255, 255, 255, 220));
+		panel.setBackground(new Color(255, 255, 255, 180));
 		panel.setBounds(10, 10, WIDTH - 20, finalHeight - 20);
 		contentPane.add(panel);
 		panel.setLayout(new BorderLayout(0, 0));
@@ -94,7 +94,7 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 		GridBagLayout gbl_pnlSouth = new GridBagLayout();
 		gbl_pnlSouth.columnWidths = new int[] { 175, 175, 175, 0 };
 		gbl_pnlSouth.rowHeights = new int[] { 30, 0 };
-		gbl_pnlSouth.columnWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
+		gbl_pnlSouth.columnWeights = new double[] { 1.0, 1.0, 1.0, Double.MIN_VALUE };
 		gbl_pnlSouth.rowWeights = new double[] { 1.0, 0.0 };
 		pnlSouth.setLayout(gbl_pnlSouth);
 

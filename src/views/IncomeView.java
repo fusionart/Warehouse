@@ -374,13 +374,13 @@ public class IncomeView extends JDialog {
 		pnlLastSaved.setBorder(new TitledBorder(
 				new EtchedBorder(EtchedBorder.LOWERED, new Color(100, 149, 237), new Color(160, 160, 160)),
 				"Последно въведен", TitledBorder.LEADING, TitledBorder.TOP, Base.DEFAULT_FONT, null));
-		pnlLastSaved.setBounds(20, 456, 250, 100);
+		pnlLastSaved.setBounds(20, 456, 250, 250);
 		pnlLastSaved.setOpaque(false);
 		pnlLastSaved.setBackground(new Color(255, 255, 255, 0));
 		pnlLastSaved.setVisible(false);
 		pnlInput.add(pnlLastSaved);
 		pnlLastSaved.setLayout(new BorderLayout(0, 0));
-		
+
 		lblLastSaved = new JLabel("");
 		lblLastSaved.setFont(Base.DEFAULT_FONT);
 		pnlLastSaved.add(lblLastSaved);
@@ -468,13 +468,13 @@ public class IncomeView extends JDialog {
 		// ExcelFile.GetPalletName(rowToSave) + "</html>");
 
 	}
-	
+
 	private void SetTextForLastSaved(PalletModel pm) {
 		pnlLastSaved.setVisible(true);
 		lblLastSaved.setText(
-				"<html>Складово място: " + pm.getPalletName() +
-				"<br>Тип батерия: " + pm.getBatteryType() +
-				"<br>Количество: " + pm.getQuantityReal() +
+				"<html>Складово място: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getPalletName() + 
+				"<br><br>Тип батерия: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getBatteryType() + 
+				"<br><br>Количество: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getQuantityReal() + 
 				"</html>");
 	}
 
@@ -496,8 +496,8 @@ public class IncomeView extends JDialog {
 
 	private String CreateSummaryString(PalletModel pm) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("<html>Заприходено количество: <br>");
-		sb.append("Складово място ");
+		sb.append("<html>&nbsp;&nbsp;Заприходено количество: <br>");
+		sb.append("&nbsp;&nbsp;&nbsp;&nbsp;Складово място ");
 		sb.append(pm.getPalletName());
 		sb.append(", Тип Батерия: ");
 		sb.append(pm.getBatteryType());
