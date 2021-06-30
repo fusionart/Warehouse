@@ -16,12 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.DocumentFilter;
 
 import ColorRenderers.IncomeReservedColorRenderer;
 import controller.Base;
 import controller.BaseMethods;
 import controller.ExcelFile;
 import controller.PrintOutcome;
+import controller.UpcaseFilter;
 import model.PalletModel;
 
 import java.awt.*;
@@ -32,6 +35,7 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.event.DocumentListener;
 
 public class IncomeView extends JDialog {
 
@@ -206,6 +210,10 @@ public class IncomeView extends JDialog {
 		pnlBatteryType.add(txtBatteryType, gbc_txtBatteryType);
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
+
+		DocumentFilter dfilter = new UpcaseFilter();
+
+		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
 
 		JPanel pnlDate = new JPanel();
 		pnlDate.setBounds(20, 85, 250, 74);

@@ -19,11 +19,14 @@ import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.DocumentFilter;
 
 import ColorRenderers.IncomeReservedColorRenderer;
 import controller.Base;
 import controller.BaseMethods;
 import controller.ExcelFile;
+import controller.UpcaseFilter;
 import model.PalletModel;
 
 import javax.swing.ButtonGroup;
@@ -254,6 +257,10 @@ public class ReservationView extends JDialog implements TableModelListener {
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
 
+		DocumentFilter dfilter = new UpcaseFilter();
+
+		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
+		
 		JPanel pnlPallet = new JPanel();
 		pnlPallet.setBounds(20, 32, 250, 74);
 		pnlInput.add(pnlPallet);
@@ -310,6 +317,8 @@ public class ReservationView extends JDialog implements TableModelListener {
 		pnlPallet.add(txtPallet, gbc_txtPallet);
 		txtPallet.setFont(Base.DEFAULT_FONT);
 		txtPallet.setColumns(10);
+
+		((AbstractDocument) txtPallet.getDocument()).setDocumentFilter(dfilter);
 
 		JPanel pnlQuantity = new JPanel();
 		pnlQuantity.setBounds(20, 202, 250, 74);

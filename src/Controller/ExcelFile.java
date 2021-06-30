@@ -121,7 +121,7 @@ public class ExcelFile {
 		PalletModel pmTemp = pmList.get(0);
 		int i = 1;
 
-		String fileName = pmTemp.getPalletName() + "_" + Base.dateFormat.format(LocalDate.now()) + "_"
+		String fileName = pmTemp.getBatteryType() + "_" + Base.dateFormat.format(LocalDate.now()) + "_"
 				+ Base.fileNameTimeFormat.format(LocalTime.now());
 
 		CreateNewWorkbook(fileName);
