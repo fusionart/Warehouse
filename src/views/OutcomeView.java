@@ -85,7 +85,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private static int rowToSave;
 
 	private List<PalletModel> pmList = new ArrayList<>();
-	
+
 	private static DefaultTableModel defaultTableModel;
 	private TableRowSorter<DefaultTableModel> sorter;
 
@@ -94,7 +94,6 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private Boolean isFiltered = false;
 
 	private static int excelFileRow;
-
 
 	private static String header[] = { "Избор", "Складово място", "Тип батерия", "Количество", "Количество по документ",
 			"Дата на производство", "Дата на приход", "Час на приход", "Статус", "Резервация" };
@@ -332,7 +331,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		pnlBatteryType.add(txtBatteryType, gbc_txtBatteryType);
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
-		
+
 		DocumentFilter dfilter = new UpcaseFilter();
 
 		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
@@ -446,7 +445,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		defaultTableModel = new DefaultTableModel(0, 0);
 
 		defaultTableModel.setColumnIdentifiers(header);
-		
+
 		sorter = new TableRowSorter<DefaultTableModel>(defaultTableModel);
 
 		tblMain = new JTable(defaultTableModel) {
@@ -482,7 +481,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		tblMain.getTableHeader().setFont(Base.DEFAULT_FONT);
 		tblMain.getTableHeader().setResizingAllowed(true);
 		scrollPane.setViewportView(tblMain);
-		//tblMain.setModel(defaultTableModel);
+		// tblMain.setModel(defaultTableModel);
 		tblMain.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		tblMain.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblMain.getModel().addTableModelListener(this);
@@ -653,7 +652,12 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			sb.append(", Тип Батерия: ");
 			sb.append(pmTemp.getBatteryType());
 			sb.append(", Количество: ");
-			sb.append(pmTemp.getQuantityReal());
+			if (rowsChecked == 1) {
+				sb.append(Integer.parseInt(txtQuantity.getText()));
+			} else {
+				sb.append(pmTemp.getQuantityReal());
+			}
+
 			sb.append("<br>");
 		}
 
@@ -748,7 +752,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 					pm.getIsReserved() });
 		}
 	}
-	
+
 	private void FilterPallet() {
 		RowFilter<DefaultTableModel, Object> rf = null;
 		// If current expression doesn't parse, don't update.

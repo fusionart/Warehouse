@@ -7,6 +7,7 @@ import java.util.List;
 import model.PalletModel;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 public class PrintOutcome implements Printable {
 
@@ -32,6 +33,15 @@ public class PrintOutcome implements Printable {
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.translate(pf.getImageableX(), pf.getImageableY());
 
+		// Start test
+		double x = pf.getHeight();
+		double y1 = pf.getWidth();
+		Paper paper = pf.getPaper();
+		double w = pf.getImageableWidth();
+		double h = pf.getImageableHeight();
+		//this.chart.draw(g2d, new Rectangle2D.Double(x, y, w, h), this.anchor, null);
+		// End test
+
 		// Now we perform our rendering
 		g.drawString("Изписано количество:", 50, 80);
 		g.drawString("Складово място", 50, 100);
@@ -54,10 +64,13 @@ public class PrintOutcome implements Printable {
 			y += 13;
 		}
 
-		g.drawString("---------------------------------------------------------------------------------------------------", 50, y += 13);
+		g.drawString(
+				"---------------------------------------------------------------------------------------------------",
+				50, y += 13);
 		g.drawString("Общо:", 290, y + 13);
 		g.drawString(String.valueOf(totalQuantity), 350, y + 13);
 		
+		g.drawString("Документ #", (int) (pf.getWidth() - 100), (int) (pf.getHeight() - 100));
 
 		// tell the caller that this page is part
 		// of the printed document
