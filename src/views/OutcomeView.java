@@ -84,13 +84,13 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private static int selectedRow = -1;
 	private static int rowToSave;
 
-	private List<PalletModel> pmList = new ArrayList<>();
+	private ArrayList<PalletModel> pmList = new ArrayList<>();
+	private List<Integer> rowsCheckedList = new ArrayList<>();
 
 	private static DefaultTableModel defaultTableModel;
 	private TableRowSorter<DefaultTableModel> sorter;
 
 	private static int selectedQuantity;
-	private int rowsChecked;
 	private Boolean isFiltered = false;
 
 	private static int excelFileRow;
@@ -256,6 +256,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		btnCancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				ResetForm();
 				dispose();
 			}
 		});
@@ -498,7 +499,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private void ResetForm() {
 		pmList.clear();
-		rowsChecked = 0;
+		rowsCheckedList.clear();
 		selectedQuantity = 0;
 		txtQuantity.setText("");
 		btnSwap.setEnabled(false);
@@ -509,29 +510,32 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		int column = e.getColumn();
 		if (column == 0) {
 			TableModel model = (TableModel) e.getSource();
-			String columnName = model.getColumnName(column);
+			// String columnName = model.getColumnName(column);
 			Boolean checked = (Boolean) model.getValueAt(row, column);
 			if (checked) {
-				AddToListForSave(row);
-//				System.out.println(tblMain.getModel().getValueAt(row, 2).toString() + " / "
-//						+ tblMain.getModel().getValueAt(row, 3).toString());
-//				System.out.println(columnName + ": " + true);
+				if (IsRowChecked(row)) {
+					AddToListForSave(row);
+				}
 			} else {
 				RemoveFromListForSave(row);
-//				System.out.println(tblMain.getModel().getValueAt(row, 2).toString() + " / "
-//						+ tblMain.getModel().getValueAt(row, 3).toString());
-//				System.out.println(columnName + ": " + false);
 			}
 			AllowSwap();
 		}
 	}
 
 	private void AllowSwap() {
-		if (rowsChecked == 2) {
+		if (rowsCheckedList.size() == 2) {
 			btnSwap.setEnabled(true);
 		} else {
 			btnSwap.setEnabled(false);
 		}
+	}
+
+	private Boolean IsRowChecked(int row) {
+		if (rowsCheckedList.contains(row)) {
+			return false;
+		}
+		return true;
 	}
 
 	private void AddToListForSave(int row) {
@@ -549,7 +553,9 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		pm.setIsReserved(false);
 
 		selectedQuantity += Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString());
-		rowsChecked++;
+
+		rowsCheckedList.add(row);
+
 		QuantityTextboxEdit();
 
 		pmList.add(pm);
@@ -557,28 +563,33 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private void RemoveFromListForSave(int row) {
 
-		String palletName = tblMain.getModel().getValueAt(row, 1).toString();
+		int isRow = rowsCheckedList.lastIndexOf(row);
+		if (isRow != -1) {
+			String palletName = tblMain.getModel().getValueAt(row, 1).toString();
 
-		selectedQuantity -= Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString());
-		rowsChecked--;
-		QuantityTextboxEdit();
+			selectedQuantity -= Integer.parseInt(tblMain.getModel().getValueAt(row, 3).toString());
 
-		Iterator itr = pmList.iterator();
-		while (itr.hasNext()) {
-			PalletModel pm = (PalletModel) itr.next();
-			if (pm.getPalletName().equals(palletName)) {
-				itr.remove();
-				break;
+			rowsCheckedList.remove(isRow);
+
+			QuantityTextboxEdit();
+
+			Iterator itr = pmList.iterator();
+			while (itr.hasNext()) {
+				PalletModel pm = (PalletModel) itr.next();
+				if (pm.getPalletName().equals(palletName)) {
+					itr.remove();
+					break;
+				}
 			}
 		}
 	}
 
 	private void QuantityTextboxEdit() {
 		txtQuantity.setText(String.valueOf(selectedQuantity));
-		if (rowsChecked > 1) {
-			txtQuantity.setEditable(false);
-		} else {
+		if (rowsCheckedList.size() == 1) {
 			txtQuantity.setEditable(true);
+		} else {
+			txtQuantity.setEditable(false);
 		}
 	}
 
@@ -587,7 +598,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		Boolean readyToSave = true;
 		int quantityLeft = 0;
 		// Save the left quantity in the working Excel warehouse db file
-		if (rowsChecked == 1) {
+		if (rowsCheckedList.size() == 1) {
 			PalletModel pm = pmList.get(0);
 			readyToSave = ValidateQuantity(pm);
 			if (readyToSave && (pm.getQuantityReal() - Integer.parseInt(txtQuantity.getText()) != 0)) {
@@ -603,7 +614,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 		if (readyToSave) {
 			ExcelFile.SaveDataAtOutcome(pmList, quantityLeft);
-			ExcelFile.UpdateTable(pmList, quantityLeft);
+			// ExcelFile.UpdateTable(pmList, quantityLeft);
 			ExcelFile.FillOutcomeReport(pmList);
 			// ShowNotify(pmList);
 		}
@@ -652,7 +663,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			sb.append(", Тип Батерия: ");
 			sb.append(pmTemp.getBatteryType());
 			sb.append(", Количество: ");
-			if (rowsChecked == 1) {
+			if (rowsCheckedList.size() == 1) {
 				sb.append(Integer.parseInt(txtQuantity.getText()));
 			} else {
 				sb.append(pmTemp.getQuantityReal());

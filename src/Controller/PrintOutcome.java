@@ -70,7 +70,7 @@ public class PrintOutcome implements Printable {
 		g.drawString("Общо:", 290, y + 13);
 		g.drawString(String.valueOf(totalQuantity), 350, y + 13);
 		
-		g.drawString("Документ #", (int) (pf.getWidth() - 100), (int) (pf.getHeight() - 100));
+		g.drawString(Base.documentNumber.toString(), 50, (int) (pf.getHeight() - 50));
 
 		// tell the caller that this page is part
 		// of the printed document

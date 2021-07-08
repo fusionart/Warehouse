@@ -213,14 +213,14 @@ public class ExcelFile {
 
 			cellToUpdate = sheet.getRow(pm.getRow()).getCell(2, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 			if (quantityLeft != 0) {
-				cellToUpdate.setCellValue(String.valueOf(quantityLeft));
+				cellToUpdate.setCellValueImpl(quantityLeft);
 			} else {
 				cellToUpdate.setCellValue(""); // clear Quantity real
 			}
 
 			cellToUpdate = sheet.getRow(pm.getRow()).getCell(3, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 			if (quantityLeft != 0) {
-				cellToUpdate.setCellValue(String.valueOf(quantityLeft));
+				cellToUpdate.setCellValueImpl(quantityLeft);
 			} else {
 				cellToUpdate.setCellValue(""); // clear Quantity
 			}

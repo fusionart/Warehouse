@@ -2,13 +2,10 @@ package controller;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.prefs.BackingStoreException;
@@ -17,9 +14,6 @@ import java.util.prefs.Preferences;
 import javax.swing.JOptionPane;
 
 import org.ini4j.Ini;
-import org.ini4j.Profile.Section;
-
-import views.LoadingScreen;
 
 public class Base {
 	public final static String DOT = ".";
@@ -113,6 +107,8 @@ public class Base {
 	public static Boolean isEmailSent = true;
 
 	public static Integer refreshTime;
+	
+	public static String documentNumber;
 
 
 	public static void LoadBasics() throws BackingStoreException {
@@ -125,6 +121,7 @@ public class Base {
 	private static void LoadPaths() {
 		try {
 			settings = ReadIni.ParseIni(MAIN_PATH);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -313,5 +310,7 @@ public class Base {
 		userWarehouseAccess = settings.node("userwarehouseaccess").get("warehouse", null);
 
 		showAllWarehouses = Boolean.parseBoolean(settings.node("showallwarehouses").get("param", null));
+		
+		documentNumber = settings.node("documentnumber").get("document", null);		
 	}
 }

@@ -1,7 +1,9 @@
 package controller;
 
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.prefs.Preferences;
 
 import org.ini4j.Ini;
@@ -13,7 +15,7 @@ public class ReadIni {
 		Ini ini;
 		Preferences prefs = null;
 		try {
-			ini = new Ini(new FileReader(filename));
+			ini = new Ini(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
 			prefs = new IniPreferences(ini);
 		} catch (InvalidFileFormatException e) {
 			// TODO Auto-generated catch block
