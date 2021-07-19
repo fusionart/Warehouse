@@ -7,35 +7,27 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
-import javax.swing.text.DocumentFilter;
 
 import ColorRenderers.IncomeReservedColorRenderer;
 import controller.Base;
 import controller.BaseMethods;
 import controller.ExcelFile;
-import controller.PrintOutcome;
 import controller.UpcaseFilter;
 import model.PalletModel;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
 
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.event.DocumentListener;
 
 public class IncomeView extends JDialog {
 
@@ -211,9 +203,7 @@ public class IncomeView extends JDialog {
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
 
-		DocumentFilter dfilter = new UpcaseFilter();
-
-		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
+		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(new UpcaseFilter(Base.FieldLimitSize));
 
 		JPanel pnlDate = new JPanel();
 		pnlDate.setBounds(20, 85, 250, 74);

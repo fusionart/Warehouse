@@ -257,7 +257,7 @@ public class ReservationView extends JDialog implements TableModelListener {
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
 
-		DocumentFilter dfilter = new UpcaseFilter();
+		DocumentFilter dfilter = new UpcaseFilter(Base.FieldLimitSize);
 
 		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
 		

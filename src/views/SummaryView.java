@@ -131,7 +131,7 @@ public class SummaryView extends JDialog implements ActionListener, DocumentList
 
 		txtConfirm.getDocument().addDocumentListener(this);
 
-		DocumentFilter dfilter = new UpcaseFilter();
+		DocumentFilter dfilter = new UpcaseFilter(Base.FieldLimitSize);
 
 		((AbstractDocument) txtConfirm.getDocument()).setDocumentFilter(dfilter);
 

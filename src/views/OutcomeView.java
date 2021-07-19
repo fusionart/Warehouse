@@ -22,7 +22,8 @@ import javax.swing.table.TableRowSorter;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.DocumentFilter;
 
-import ColorRenderers.IncomeReservedColorRenderer;
+import org.apache.derby.vti.IFastPath;
+
 import controller.Base;
 import controller.BaseMethods;
 import controller.ExcelFile;
@@ -55,19 +56,14 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import java.awt.BorderLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -85,6 +81,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private static int rowToSave;
 
 	private ArrayList<PalletModel> pmList = new ArrayList<>();
+	private ArrayList<PalletModel> repritntPmList = new ArrayList<>();
 	private List<Integer> rowsCheckedList = new ArrayList<>();
 
 	private static DefaultTableModel defaultTableModel;
@@ -135,18 +132,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 						SaveData();
 						FillTable();
 
-						PrinterJob job = PrinterJob.getPrinterJob();
-						job.setPrintable(new PrintOutcome(pmList));
-						if (job.printDialog()) {
-							try {
-
-								// print the label
-								job.print();
-
-							} catch (PrinterException pe) {
-								// System.out.println(pe);
-							}
-						}
+						PrintOutcome(pmList);
 
 						ResetForm();
 					}
@@ -164,6 +150,16 @@ public class OutcomeView extends JDialog implements TableModelListener {
 				}
 			}
 		};
+
+		Action reprintAction = new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!repritntPmList.isEmpty()) {
+					PrintOutcome(repritntPmList);
+				}
+			}
+		};
+
 		GridBagLayout gbl_pnlButtons = new GridBagLayout();
 		gbl_pnlButtons.columnWidths = new int[] { 0, 150, 150, 0 };
 		gbl_pnlButtons.rowHeights = new int[] { 30, 0 };
@@ -265,6 +261,9 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		inputMap.put(KeyStroke.getKeyStroke("F10"), "saveAction");
 		actionMap.put("saveAction", saveAction);
 
+		inputMap.put(KeyStroke.getKeyStroke("F11"), "reprintAction");
+		actionMap.put("reprintAction", reprintAction);
+
 		JPanel pnlInput = new JPanel() {
 			protected void paintComponent(Graphics g) {
 				g.setColor(getBackground());
@@ -333,7 +332,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		txtBatteryType.setFont(Base.DEFAULT_FONT);
 		txtBatteryType.setColumns(10);
 
-		DocumentFilter dfilter = new UpcaseFilter();
+		DocumentFilter dfilter = new UpcaseFilter(Base.FieldLimitSize);
 
 		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
 
@@ -498,6 +497,8 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	}
 
 	private void ResetForm() {
+		repritntPmList.clear();
+		repritntPmList = (ArrayList<PalletModel>) pmList.clone();
 		pmList.clear();
 		rowsCheckedList.clear();
 		selectedQuantity = 0;
@@ -714,6 +715,21 @@ public class OutcomeView extends JDialog implements TableModelListener {
 			}
 		}
 		return true;
+	}
+
+	private void PrintOutcome(ArrayList<PalletModel> pm) {
+		PrinterJob job = PrinterJob.getPrinterJob();
+		job.setPrintable(new PrintOutcome(pm));
+		if (job.printDialog()) {
+			try {
+
+				// print the label
+				job.print();
+
+			} catch (PrinterException pe) {
+				// System.out.println(pe);
+			}
+		}
 	}
 
 	private void SetBackgroundPicture() {

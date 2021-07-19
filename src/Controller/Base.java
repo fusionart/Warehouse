@@ -109,6 +109,8 @@ public class Base {
 	public static Integer refreshTime;
 	
 	public static String documentNumber;
+	
+	public static int FieldLimitSize;
 
 
 	public static void LoadBasics() throws BackingStoreException {
@@ -311,6 +313,8 @@ public class Base {
 
 		showAllWarehouses = Boolean.parseBoolean(settings.node("showallwarehouses").get("param", null));
 		
-		documentNumber = settings.node("documentnumber").get("document", null);		
+		documentNumber = settings.node("documentnumber").get("document", null);	
+		
+		FieldLimitSize = Integer.parseInt(settings.node("fieldlimitsize").get("size", null));	
 	}
 }
