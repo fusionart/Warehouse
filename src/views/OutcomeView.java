@@ -17,6 +17,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.text.AbstractDocument;
@@ -59,8 +60,12 @@ import java.awt.event.MouseEvent;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -73,7 +78,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private JTextField txtBatteryType;
 	private JTextField txtPallet;
 	private JTextField txtQuantity;
-	private JTable tblMain;
+	private static JTable tblMain;
 	private JLabel lblBackground;
 	private JButton btnSwap;
 
@@ -85,6 +90,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 	private List<Integer> rowsCheckedList = new ArrayList<>();
 
 	private static DefaultTableModel defaultTableModel;
+	private static DefaultTableModel footerTableModel;
 	private TableRowSorter<DefaultTableModel> sorter;
 
 	private static int selectedQuantity;
@@ -92,8 +98,12 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 	private static int excelFileRow;
 
+	private static int realQuantityTotal;
+	private static int quantityTotal;
+
 	private static String header[] = { "Избор", "Складово място", "Тип батерия", "Количество", "Количество по документ",
 			"Дата на производство", "Дата на приход", "Час на приход", "Статус", "Резервация" };
+	private JTable tblFooter;
 
 	/**
 	 * Create the frame.
@@ -278,7 +288,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		pnlInput.setLayout(null);
 
 		JPanel pnlBatteryType = new JPanel();
-		pnlBatteryType.setBounds(20, 117, 250, 74);
+		pnlBatteryType.setBounds(20, 11, 250, 74);
 		pnlInput.add(pnlBatteryType);
 		pnlBatteryType.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlBatteryType = new GridBagLayout();
@@ -301,14 +311,20 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		txtBatteryType.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				FilterBatteryType();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 
 			public void insertUpdate(DocumentEvent e) {
 				FilterBatteryType();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 
 			public void removeUpdate(DocumentEvent e) {
 				FilterBatteryType();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 		});
 //		txtBatteryType.addFocusListener(new FocusAdapter() {
@@ -337,7 +353,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		((AbstractDocument) txtBatteryType.getDocument()).setDocumentFilter(dfilter);
 
 		JPanel pnlPallet = new JPanel();
-		pnlPallet.setBounds(20, 32, 250, 74);
+		pnlPallet.setBounds(20, 96, 250, 74);
 		pnlInput.add(pnlPallet);
 		pnlPallet.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlPallet = new GridBagLayout();
@@ -360,14 +376,20 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		txtPallet.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				FilterPallet();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 
 			public void insertUpdate(DocumentEvent e) {
 				FilterPallet();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 
 			public void removeUpdate(DocumentEvent e) {
 				FilterPallet();
+				ShowQuantityTotal();
+				FillFooter();
 			}
 		});
 //		txtPallet.addFocusListener(new FocusAdapter() {
@@ -394,7 +416,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		((AbstractDocument) txtPallet.getDocument()).setDocumentFilter(dfilter);
 
 		JPanel pnlQuantity = new JPanel();
-		pnlQuantity.setBounds(20, 202, 250, 74);
+		pnlQuantity.setBounds(20, 181, 250, 74);
 		pnlInput.add(pnlQuantity);
 		pnlQuantity.setBackground(new Color(255, 255, 255, 0));
 		GridBagLayout gbl_pnlQuantity = new GridBagLayout();
@@ -439,7 +461,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		});
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(310, 11, 1600, 887);
+		scrollPane.setBounds(310, 11, 1600, 846);
 		contentPane.add(scrollPane);
 
 		defaultTableModel = new DefaultTableModel(0, 0);
@@ -475,6 +497,7 @@ public class OutcomeView extends JDialog implements TableModelListener {
 
 			}
 		});
+
 		tblMain.setBounds(0, 0, 0, 0);
 		tblMain.setFont(Base.DEFAULT_FONT);
 		tblMain.setRowHeight(26);
@@ -488,12 +511,75 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		tblMain.setRowSorter(sorter);
 		FillTable();
 		BaseMethods.ResizeColumnWidth(tblMain);
+
+		JScrollPane scrollPaneFooter = new JScrollPane();
+		scrollPaneFooter.setBounds(310, 868, 1600, 28);
+		scrollPaneFooter.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+		scrollPaneFooter.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		contentPane.add(scrollPaneFooter);
+
+		footerTableModel = new DefaultTableModel(0, 0);
+		footerTableModel.setColumnIdentifiers(header);
+
+		tblFooter = new JTable(footerTableModel) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			};
+		};
+		tblFooter.setBounds(0, 0, 0, 0);
+		tblFooter.setFont(Base.DEFAULT_FONT);
+		tblFooter.setRowHeight(26);
+		tblFooter.getTableHeader().setFont(Base.DEFAULT_FONT);
+		tblFooter.getTableHeader().setResizingAllowed(true);
+		tblFooter.getTableHeader().setUI(null);
+		tblFooter.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		scrollPaneFooter.setViewportView(tblFooter);
+		FillFooter();
+
+		ResizeTables();
 		// IncomeReservedColorRenderer ircr = new IncomeReservedColorRenderer();
 		// tblMain.setDefaultRenderer(Object.class, ircr);
 
 		SetBackgroundPicture();
 		setVisible(true);
 
+	}
+
+	private void ResizeTables() {
+		tblMain.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+
+			@Override
+			public void columnSelectionChanged(ListSelectionEvent e) {
+			}
+
+			@Override
+			public void columnRemoved(TableColumnModelEvent e) {
+			}
+
+			@Override
+			public void columnMoved(TableColumnModelEvent e) {
+			}
+
+			@Override
+			public void columnMarginChanged(ChangeEvent e) {
+				final TableColumnModel tableColumnModel = tblMain.getColumnModel();
+				TableColumnModel footerColumnModel = tblFooter.getColumnModel();
+				for (int i = 0; i < tableColumnModel.getColumnCount(); i++) {
+					int w = tableColumnModel.getColumn(i).getWidth();
+					footerColumnModel.getColumn(i).setMinWidth(w);
+					footerColumnModel.getColumn(i).setMaxWidth(w);
+					// footerColumnModel.getColumn(i).setPreferredWidth(w);
+				}
+				tblFooter.doLayout();
+				tblFooter.repaint();
+				repaint();
+			}
+
+			@Override
+			public void columnAdded(TableColumnModelEvent e) {
+			}
+		});
 	}
 
 	private void ResetForm() {
@@ -503,6 +589,8 @@ public class OutcomeView extends JDialog implements TableModelListener {
 		rowsCheckedList.clear();
 		selectedQuantity = 0;
 		txtQuantity.setText("");
+		txtBatteryType.setText("");
+		txtBatteryType.requestFocus();
 		btnSwap.setEnabled(false);
 	}
 
@@ -777,6 +865,23 @@ public class OutcomeView extends JDialog implements TableModelListener {
 					pm.getQuantityReal(), pm.getQuantity(), BaseMethods.FormatDate(pm.getProductionDate()),
 					BaseMethods.FormatDate(pm.getIncomeDate()), pm.getIncomeTime(), pm.getStatus(),
 					pm.getIsReserved() });
+		}
+	}
+
+	private static void FillFooter() {
+		footerTableModel.setRowCount(0);
+		footerTableModel.addRow(new Object[] { null, tblMain.getRowCount(), null, realQuantityTotal, quantityTotal,
+				null, null, null, null, null });
+	}
+
+	private void ShowQuantityTotal() {
+		realQuantityTotal = 0;
+		quantityTotal = 0;
+		for (int i = 0; i < tblMain.getRowCount(); i++) {
+			realQuantityTotal += Integer
+					.parseInt(tblMain.getModel().getValueAt(tblMain.convertRowIndexToModel(i), 3).toString());
+			quantityTotal += Integer
+					.parseInt(tblMain.getModel().getValueAt(tblMain.convertRowIndexToModel(i), 4).toString());
 		}
 	}
 

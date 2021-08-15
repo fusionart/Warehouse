@@ -334,9 +334,9 @@ public class IncomeView extends JDialog {
 					} else if (BaseMethods.CheckIfNegative(txtQuantityReal.getText())) {
 						txtQuantityReal.setText("");
 						txtQuantityReal.requestFocus();
-					} else {
+					} else if (CheckQuantitySize(txtQuantityReal.getText())) {
 						txtQuantity.setText(txtQuantityReal.getText());
-					}
+					} 
 				}
 			}
 		});
@@ -469,11 +469,9 @@ public class IncomeView extends JDialog {
 
 	private void SetTextForLastSaved(PalletModel pm) {
 		pnlLastSaved.setVisible(true);
-		lblLastSaved.setText(
-				"<html>Складово място: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getPalletName() + 
-				"<br><br>Тип батерия: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getBatteryType() + 
-				"<br><br>Количество: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getQuantityReal() + 
-				"</html>");
+		lblLastSaved.setText("<html>Складово място: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getPalletName()
+				+ "<br><br>Тип батерия: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getBatteryType()
+				+ "<br><br>Количество: <br>" + "&nbsp;&nbsp;&nbsp;&nbsp;" + pm.getQuantityReal() + "</html>");
 	}
 
 	private PalletModel CreateModelToSave() {
@@ -561,6 +559,17 @@ public class IncomeView extends JDialog {
 			return false;
 		}
 
+		return true;
+	}
+	
+	private Boolean CheckQuantitySize(String quantity) {
+		if(Integer.parseInt(quantity) > Base.QuantityLimitSize) {
+			JOptionPane.showMessageDialog(null, "Въведеното количество е повече от " + Base.QuantityLimitSize + ".", "Грешка",
+					JOptionPane.INFORMATION_MESSAGE);
+			txtQuantityReal.requestFocus();
+			return false;
+		}
+		
 		return true;
 	}
 

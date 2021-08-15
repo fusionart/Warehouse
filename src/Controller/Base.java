@@ -3,6 +3,7 @@ package controller;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ public class Base {
 	// Paths
 	private final static String MAIN_PATH = "C:\\Warehouse\\sys\\settings.ini";
 	public final static String DB_PATH = "C:\\Warehouse\\DB\\";
+	
+	//Checks if java code is in debug mode
+	//boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean(). getInputArguments().toString().contains("-agentlib:jdwp");
 
 	// database
 	// public static LinkedHashMap<Integer, DowntimeModel> downtimeDb;
@@ -111,9 +115,12 @@ public class Base {
 	public static String documentNumber;
 	
 	public static int FieldLimitSize;
+	public static int QuantityLimitSize;
 
 
 	public static void LoadBasics() throws BackingStoreException {
+		//String path = Base.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		//String decodedPath = URLDecoder.decode(path, "UTF-8");
 		LoadPaths();
 		AssignVariables();
 		AssignMainDbFile(userWarehouseAccess);
@@ -315,6 +322,8 @@ public class Base {
 		
 		documentNumber = settings.node("documentnumber").get("document", null);	
 		
-		FieldLimitSize = Integer.parseInt(settings.node("fieldlimitsize").get("size", null));	
+		FieldLimitSize = Integer.parseInt(settings.node("fieldlimitsize").get("size", null));
+		
+		QuantityLimitSize = Integer.parseInt(settings.node("quantitylimitsize").get("size", null));
 	}
 }
