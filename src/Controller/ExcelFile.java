@@ -381,7 +381,7 @@ public class ExcelFile {
 		MainView.SetVisibleButtons(false);
 		allRows = new HashMap<>();
 		DeleteDataFromTable();
-
+		
 		mainConnection = getConnection();
 		try {
 			mainStatement = mainConnection.createStatement();
@@ -390,8 +390,8 @@ public class ExcelFile {
 			e.printStackTrace();
 		}
 
-		LoadingScreen ls = new LoadingScreen();
-		Sheet sheet = GetSheet();
+		final LoadingScreen ls = new LoadingScreen();
+		final Sheet sheet = GetSheet();
 
 		new SwingWorker<Void, Integer>() {
 			int i = 0;
@@ -408,7 +408,7 @@ public class ExcelFile {
 
 					// Reading cells in this way because For loop and Iterator can handle with blank
 					// cells
-					for (int cn = 0; cn <= Base.LAST_ROW; cn++) {
+					for (int cn = 0; cn <= Base.LAST_COLUMN; cn++) {
 						Cell cell = row.getCell(cn, MissingCellPolicy.RETURN_BLANK_AS_NULL);
 						if (cell == null) {
 							temp.add(" ");

@@ -42,6 +42,8 @@ public class IncomeView extends JDialog {
 	private JPanel pnlPalletPlace;
 	private JPanel pnlLastSaved;
 	private JLabel lblLastSaved;
+	private static JLabel lblFullPalletPlacesCount;
+	private static JLabel lblFreePalletPlacesCount;
 
 	private static int selectedRow = -1;
 	private static int rowToSave;
@@ -112,7 +114,7 @@ public class IncomeView extends JDialog {
 		gbl_pnlButtons.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
 		pnlButtons.setLayout(gbl_pnlButtons);
 
-		JButton btnSave = new JButton("Запази");
+		final JButton btnSave = new JButton("Запази");
 		GridBagConstraints gbc_btnSave = new GridBagConstraints();
 		gbc_btnSave.fill = GridBagConstraints.BOTH;
 		gbc_btnSave.insets = new Insets(0, 0, 0, 5);
@@ -382,6 +384,32 @@ public class IncomeView extends JDialog {
 		lblLastSaved = new JLabel("");
 		lblLastSaved.setFont(Base.DEFAULT_FONT);
 		pnlLastSaved.add(lblLastSaved);
+		
+		JPanel pnlPalletPlacesCount = new JPanel();
+		pnlPalletPlacesCount.setBorder(new TitledBorder(
+				new EtchedBorder(EtchedBorder.LOWERED, new Color(100, 149, 237), new Color(160, 160, 160)),
+				"Складови места", TitledBorder.LEADING, TitledBorder.TOP, Base.DEFAULT_FONT, null));
+		pnlPalletPlacesCount.setBounds(20, 717, 250, 159);
+		pnlPalletPlacesCount.setOpaque(false);
+		pnlPalletPlacesCount.setBackground(new Color(255, 255, 255, 0));
+		pnlInput.add(pnlPalletPlacesCount);
+		pnlPalletPlacesCount.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		JLabel lblFreePalletPlaces = new JLabel("Свободни места");
+		lblFreePalletPlaces.setFont(Base.DEFAULT_FONT);
+		pnlPalletPlacesCount.add(lblFreePalletPlaces);
+		
+		lblFreePalletPlacesCount = new JLabel("");
+		lblFreePalletPlacesCount.setFont(Base.DEFAULT_FONT);
+		pnlPalletPlacesCount.add(lblFreePalletPlacesCount);
+		
+		JLabel lblFullPalletPlaces = new JLabel("Заети места");
+		lblFullPalletPlaces.setFont(Base.DEFAULT_FONT);
+		pnlPalletPlacesCount.add(lblFullPalletPlaces);
+		
+		lblFullPalletPlacesCount = new JLabel("");
+		lblFullPalletPlacesCount.setFont(Base.DEFAULT_FONT);
+		pnlPalletPlacesCount.add(lblFullPalletPlacesCount);
 
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(310, 11, 1600, 887);
@@ -587,6 +615,8 @@ public class IncomeView extends JDialog {
 	}
 
 	private static void FillTable() {
+		int freePalletPlacesCount = 0;
+		int fullPalletPlaceCount = 0;
 
 		ExcelFile.setCallingFrame(1);
 
@@ -597,11 +627,22 @@ public class IncomeView extends JDialog {
 
 		for (Map.Entry<Integer, PalletModel> entry : data.entrySet()) {
 			pm = entry.getValue();
-
+			
+			if (pm.getPalletName().trim().length() > 0) {
+				if (pm.getBatteryType().trim().isEmpty()) {
+					freePalletPlacesCount ++; 
+				} else {
+					fullPalletPlaceCount ++;
+				}
+			}
+			
 			defaultTableModel.addRow(
 					new Object[] { pm.getPalletName(), pm.getBatteryType(), pm.getQuantityReal(), pm.getQuantity(),
 							BaseMethods.FormatDate(pm.getProductionDate()), BaseMethods.FormatDate(pm.getIncomeDate()),
 							pm.getIncomeTime(), pm.getStatus(), pm.getIsReserved() });
 		}
+		
+		lblFreePalletPlacesCount.setText(String.valueOf(freePalletPlacesCount));
+		lblFullPalletPlacesCount.setText(String.valueOf(fullPalletPlaceCount));
 	}
 }

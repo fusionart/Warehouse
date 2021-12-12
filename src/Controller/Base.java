@@ -54,7 +54,7 @@ public class Base {
 	public final static int ELEMENT_OFFSET = 37;
 	public final static int PANEL_HEIGHT = 74;
 	public final static int PANEL_WIDTH = 250;
-	public final static int LAST_ROW = 8;
+	public final static int LAST_COLUMN = 8;
 
 	public final static Locale LOCALE = new Locale("bg");
 
@@ -76,7 +76,7 @@ public class Base {
 	public static String icon;
 
 	public static Boolean showAllWarehouses;
-	private static String userWarehouseAccess;
+	public static String userWarehouseAccess;
 	
 	public static Boolean tableExists = false;
 
@@ -117,7 +117,6 @@ public class Base {
 	public static int FieldLimitSize;
 	public static int QuantityLimitSize;
 
-
 	public static void LoadBasics() throws BackingStoreException {
 		//String path = Base.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		//String decodedPath = URLDecoder.decode(path, "UTF-8");
@@ -153,6 +152,11 @@ public class Base {
 			mainDbFile = dbFileC;
 			mainReportAddress = reportAddressC;
 			mainWarehouseName = warehouseCName;
+			break;
+		case "":
+			mainDbFile = dbFileA;
+			mainReportAddress = reportAddressA;
+			mainWarehouseName = warehouseAName;
 			break;
 		default:
 			int result = JOptionPane.showConfirmDialog(null, "Не може да бъде зареден файл dbFile" + userWarehouseAccess,

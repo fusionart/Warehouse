@@ -327,10 +327,6 @@ public class MainView extends JFrame {
 		contentPane.add(pnlButtons);
 		pnlButtons.setLayout(null);
 
-		if (Base.showAllWarehouses) {
-			pnlButtons.setVisible(false);
-		}
-
 		JButton btnIncome = new JButton("Приход");
 		btnIncome.setBounds(0, 0, 150, 30);
 		pnlButtons.add(btnIncome);
@@ -339,6 +335,7 @@ public class MainView extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
+					Base.AssignMainDbFile(Base.userWarehouseAccess);
 					IncomeView incomeView = new IncomeView();
 					incomeView.addWindowListener(new WindowAdapter() {
 						@Override
@@ -363,6 +360,7 @@ public class MainView extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
+					Base.AssignMainDbFile(Base.userWarehouseAccess);
 					OutcomeView outcomeView = new OutcomeView();
 					outcomeView.addWindowListener(new WindowAdapter() {
 						@Override
@@ -387,6 +385,7 @@ public class MainView extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
+					Base.AssignMainDbFile(Base.userWarehouseAccess);
 					ReservationView reservationView = new ReservationView();
 					reservationView.addWindowListener(new WindowAdapter() {
 						@Override
@@ -406,7 +405,8 @@ public class MainView extends JFrame {
 		if (Base.showAllWarehouses) {
 			pnlRadioButtons.setVisible(true);
 			pnlFilters.setVisible(true);
-			scrollPane.setBounds(10, 80, 1346, 626);
+			
+			scrollPane.setBounds(10, 80, 1900, 820);
 			LoadSelectedtWarehouseData();
 			// FillTable();
 		}
@@ -472,7 +472,7 @@ public class MainView extends JFrame {
 	public static void SetVisibleButtons(Boolean isVisible) {
 		pnlButtons.setVisible(isVisible);
 
-		if (Base.showAllWarehouses) {
+		if (Base.userWarehouseAccess.isEmpty()) {
 			pnlButtons.setVisible(false);
 		}
 	}
